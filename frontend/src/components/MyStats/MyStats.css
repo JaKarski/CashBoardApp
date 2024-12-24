@@ -1,0 +1,47 @@
+.stats-section {
+  width: 100%;
+  max-width: 350px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  text-align: left;  /* Wyrównanie tekstu do lewej */
+  margin: 20px auto;
+  color: white;
+}
+
+.stats-section h2 {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 0 10px;  /* Dodanie odstępu wewnętrznego */
+}
+
+.stat p {
+  margin: 0;
+  font-size: 1.1em;
+  flex-grow: 1;  /* Rozciągnięcie tekstu na resztę dostępnej przestrzeni */
+  text-align: left;  /* Wyrównanie tekstu do lewej */
+}
+
+.icon {
+  margin-right: 15px;  /* Większy odstęp między ikoną a tekstem */
+  color: #ffdf00; /* Jasny złoty kolor dla ikon */
+  font-size: 1.5em;
+  width: 30px; /* Stała szerokość, aby wszystkie ikony były wyrównane */
+}
+
+@media (max-width: 768px) {
+  .stats-section {
+    max-width: 90%;
+    padding: 15px;
+  }
+}

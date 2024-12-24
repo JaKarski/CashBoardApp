@@ -1,0 +1,50 @@
+.additional-info-section {
+  width: 25%;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.4); /* Zmiana na bardziej wyrazisty czarny */
+  backdrop-filter: blur(5px);
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Zwiększony cień dla większej głębi */
+  text-align: center;
+  color: white; /* Zmieniono kolor tekstu na biały */
+}
+
+.additional-info p {
+  font-size: 1.4em;
+  margin: 10px 0;
+  color: #f5f5f5; /* Lekko jaśniejszy kolor dla lepszej widoczności */
+}
+
+.button {
+  background-color: rgba(255, 255, 255, 0.2); /* Jasne tło z przezroczystością */
+  border: 2px solid rgba(255, 255, 255, 0.5); /* Dodano delikatny obrys */
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1.1em; /* Lekko powiększono rozmiar czcionki */
+  border-radius: 12px; /* Zaokrąglone krawędzie */
+  margin: 10px; /* Odstęp między przyciskami */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.button:hover {
+  background-color: rgba(255, 255, 255, 0.4); /* Zwiększona przezroczystość na hover */
+  box-shadow: 0 6px 12px 0 rgba(0, 0, 0, 0.4); /* Większy cień dla efektu hover */
+}
+
+h2 {
+  font-size: 2.2em; /* Większy nagłówek */
+  margin-bottom: 15px;
+}
+
+.section h3 {
+  font-size: 1.8em;
+  margin: 15px 0 10px;
+  text-transform: uppercase;
+}
+
+.section p {
+  font-size: 1.3em;
+  margin: 5px 0;
+}

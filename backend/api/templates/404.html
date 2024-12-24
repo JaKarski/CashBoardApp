@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strona nie znaleziona</title>
+    <style>
+        /* Reset marginesów i paddingów dla całego dokumentu */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #2e2e2e;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+        }
+
+        /* Kontener na całą wysokość i szerokość ekranu */
+        .not-found-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background-color: #2e2e2e;
+            color: #fff;
+            text-align: center;
+        }
+
+        /* Stos kart */
+        .card-stack {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            width: 100px;
+            height: 140px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #333;
+            border: 2px solid #fff;
+            transition: transform 0.3s;
+        }
+
+        .ace-of-spades {
+            background-color: black;
+        }
+
+        .king-of-hearts {
+            background-color: red;
+        }
+
+        .queen-of-diamonds {
+            background-color: blue;
+        }
+
+        .card:hover {
+            transform: rotate(10deg);
+        }
+
+        /* Tekst błędu */
+        .error-title {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .error-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Przycisk powrotu */
+        .back-home {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .back-home:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="not-found-container">
+    <div class="card-stack">
+        <div class="card ace-of-spades">A♠</div>
+        <div class="card king-of-hearts">K♥</div>
+        <div class="card queen-of-diamonds">Q♦</div>
+    </div>
+    <h1 class="error-title">404 - Lost in the shuffle</h1>
+    <p class="error-text">Looks like the page you're looking for was a bad beat. Try your luck again!</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+}
+
+h1 {
+    margin-bottom: 20px; /* Zmniejszamy margines poniżej tytułu do 20px */
+}
+
+.form-group {
+    position: relative;
+    width: 90%;
+    margin: 10px 0; /* Zmniejszamy odstęp między polami tekstowymi do 10px */
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background: transparent;
+    position: relative;
+    z-index: 1;
+    font-size: 16px;
+    color: white; /* Kolor wpisywanego tekstu na biały */
+}
+
+.form-input::placeholder {
+    color: transparent; /* Ukryj placeholder, jeśli nie potrzebny */
+}
+
+.form-label {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    color: #666; /* Lekko ciemniejszy kolor dla tekstu etykiety */
+    font-size: 16px;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: 0.2s ease all;
+    z-index: 0;
+}
+
+.form-input:focus ~ .form-label,
+.form-input:not(:placeholder-shown) ~ .form-label {
+    top: -10px;
+    left: 10px;
+    font-size: 12px;
+    color: #999; /* Ciemniejszy kolor gdy etykieta idzie do góry */
+}
+
+.form-button {
+    width: 95%;
+    padding: 10px;
+    margin: 20px 0;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.form-button:hover {
+    background-color: #0056b3;
+}
+
+/* Styl dla tekstu przełączającego między logowaniem a rejestracją */
+.switch-form {
+    margin-top: 10px;
+    font-size: 14px;
+    color: white; /* Kolor białego tekstu dla ciemnego tła */
+}
+
+.switch-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.switch-link:hover {
+    text-decoration: underline;
+}

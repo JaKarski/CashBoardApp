@@ -1,0 +1,77 @@
+/* Ogólne style dla dashboardu */
+.container{
+  background: url('../../images/tlo_swieta.png') no-repeat center center;
+}
+.dashboard-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  color: white;
+  padding: 20px;
+  box-sizing: border-box;
+  background-size: cover; /* Tło będzie rozciągnięte na pełną szerokość kontenera */
+  border-radius: 15px;
+}
+
+/* Stylowanie dla sekcji, np. elastyczne szerokości */
+.dashboard-container > * {
+  flex: 1;
+  margin: 10px;
+}
+
+/* Responsywne stylowanie dla ekranów poniżej 1100px */
+@media (max-width: 1100px) {
+  .dashboard-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+    width: 100%;
+    height: auto; /* Wysokość dopasowana do zawartości */
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+}
+
+/* Responsywne stylowanie dla ekranów poniżej 768px (tablety) */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 5px;
+  }
+
+  .dashboard-container > * {
+    margin: 5px;
+  }
+
+  h1 {
+    font-size: 1.5em;
+  }
+}
+
+/* Responsywne stylowanie dla ekranów poniżej 480px (telefony) */
+@media (max-width: 480px) {
+  .dashboard-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 5px;
+    height: auto;
+    margin-top: 700px;
+  }
+
+  .dashboard-container > * {
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  h1 {
+    font-size: 1.2em;
+  }
+
+  /* Zmniejszenie paddingu i marginesu dla lepszej czytelności na telefonach */
+  .dashboard-container {
+    padding: 5px;
+  }
+}

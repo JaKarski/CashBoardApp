@@ -1,0 +1,91 @@
+.plot-section {
+  width: 100%;
+  max-width: 300px;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  margin: 20px auto;
+  color: white;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.plot-section.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  padding: 40px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fullscreen-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.close-fullscreen-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.plot-placeholder {
+  height: 150px;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  margin: 25px auto;
+}
+
+.plot-placeholder p {
+  font-size: 1.2em;
+  color: white;
+}
+
+.plot-section.fullscreen .chart-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.chart-container {
+  width: 100%;
+  height: 300px; /* Normalny widok */
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .plot-section {
+    margin: 5px auto;
+  }
+}
