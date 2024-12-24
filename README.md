@@ -19,7 +19,6 @@ CashBoard/
 │   ├── backend/               # Główna konfiguracja projektu Django (settings, urls, wsgi)
 │   ├── manage.py              # Narzędzie do zarządzania projektem Django
 │   └── requirements.txt       # Lista zależności backendu
-├── venv/                      # Wirtualne środowisko Python
 ├── frontend/                  # Frontend aplikacji (React + Vite)
 │   ├── eslint.config.js       # Konfiguracja ESLint
 │   ├── index.html             # Główny plik HTML
