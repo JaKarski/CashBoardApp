@@ -14,20 +14,25 @@ Aplikacja jest podzielona na dwie główne części: backend (Django) i frontend
 ### **Struktura plików**
 ```plaintext
 CashBoard/
-├── backend/                   # Backend aplikacji (Django)
-│   ├── api/                   # Moduł API (modele, widoki, serializery)
-│   ├── backend/               # Główna konfiguracja projektu Django (settings, urls, wsgi)
-│   ├── manage.py              # Narzędzie do zarządzania projektem Django
-│   └── requirements.txt       # Lista zależności backendu
-├── frontend/                  # Frontend aplikacji (React + Vite)
-│   ├── eslint.config.js       # Konfiguracja ESLint
-│   ├── index.html             # Główny plik HTML
-│   ├── node_modules/          # Zależności frontendu (npm)
-│   ├── package-lock.json      # Automatyczny plik do zarządzania zależnościami
-│   ├── package.json           # Lista zależności frontendu
-│   ├── public/                # Statyczne zasoby (favicon, obrazy)
-│   ├── src/                   # Kod źródłowy frontendu (komponenty React)
-│   └── vite.config.js         # Konfiguracja Vite
+├── backend/                             # Katalog backendu (Django)
+│   ├── api/                             # Moduł API: modele, widoki, serializery
+│   ├── backend/                         # Główna konfiguracja projektu Django
+│   │   ├── settings.py                  # Plik konfiguracji Django
+│   │   └── .env                         # Plik .env dla backendu (zmienne środowiskowe)
+│   ├── manage.py                        # Narzędzie do zarządzania projektem Django
+│   ├── requirements.txt                 # Lista zależności backendu
+│   ├── Dockerfile                       # Plik do budowania obrazu Dockera dla backendu
+├── frontend/                            # Katalog frontendu (React + Vite)
+│   ├── src/                             # Źródłowy kod aplikacji React
+│   ├── public/                          # Statyczne pliki frontendu
+│   ├── Dockerfile                       # Plik do budowania obrazu Dockera dla frontendu
+│   ├── vite.config.js                   # Konfiguracja Vite dla frontendu
+│   └── .env                             # Plik .env dla frontendu (zmienne środowiskowe)
+├── nginx/                               # Katalog konfiguracji NGINX
+│   ├── nginx.conf                       # Główny plik konfiguracji NGINX
+│   └── ssl/                             # Folder dla certyfikatów SSL
+├── docker-compose.yml                   # Plik konfiguracji Docker Compose
+└── .env                                 # Plik główny dla zmiennych środowiskowych
 ```
 
 ## **3. Technologie**
