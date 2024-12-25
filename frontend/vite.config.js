@@ -9,7 +9,11 @@ dotenv.config()
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: process.env.VITE_HOST || 'localhost',
+    host: process.env.VITE_HOST || 'localhost', // Domyślnie localhost, ale można zmienić na 0.0.0.0 w Dockerze
     port: parseInt(process.env.VITE_PORT, 10) || 3000,
-  }
+    strictPort: true,
+  },
 })
+
+
+

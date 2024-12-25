@@ -14,21 +14,25 @@ Aplikacja jest podzielona na dwie główne części: backend (Django) i frontend
 ### **Struktura plików**
 ```plaintext
 CashBoard/
-├── backend/                   # Backend aplikacji (Django)
-│   ├── api/                   # Moduł API (modele, widoki, serializery)
-│   ├── backend/               # Główna konfiguracja projektu Django (settings, urls, wsgi)
-│   ├── manage.py              # Narzędzie do zarządzania projektem Django
-│   └── requirements.txt       # Lista zależności backendu
-├── venv/                      # Wirtualne środowisko Python
-├── frontend/                  # Frontend aplikacji (React + Vite)
-│   ├── eslint.config.js       # Konfiguracja ESLint
-│   ├── index.html             # Główny plik HTML
-│   ├── node_modules/          # Zależności frontendu (npm)
-│   ├── package-lock.json      # Automatyczny plik do zarządzania zależnościami
-│   ├── package.json           # Lista zależności frontendu
-│   ├── public/                # Statyczne zasoby (favicon, obrazy)
-│   ├── src/                   # Kod źródłowy frontendu (komponenty React)
-│   └── vite.config.js         # Konfiguracja Vite
+├── backend/                             # Katalog backendu (Django)
+│   ├── api/                             # Moduł API: modele, widoki, serializery
+│   ├── backend/                         # Główna konfiguracja projektu Django
+│   │   ├── settings.py                  # Plik konfiguracji Django
+│   │   └── .env                         # Plik .env dla backendu (zmienne środowiskowe)
+│   ├── manage.py                        # Narzędzie do zarządzania projektem Django
+│   ├── requirements.txt                 # Lista zależności backendu
+│   ├── Dockerfile                       # Plik do budowania obrazu Dockera dla backendu
+├── frontend/                            # Katalog frontendu (React + Vite)
+│   ├── src/                             # Źródłowy kod aplikacji React
+│   ├── public/                          # Statyczne pliki frontendu
+│   ├── Dockerfile                       # Plik do budowania obrazu Dockera dla frontendu
+│   ├── vite.config.js                   # Konfiguracja Vite dla frontendu
+│   └── .env                             # Plik .env dla frontendu (zmienne środowiskowe)
+├── nginx/                               # Katalog konfiguracji NGINX
+│   ├── nginx.conf                       # Główny plik konfiguracji NGINX
+│   └── ssl/                             # Folder dla certyfikatów SSL
+├── docker-compose.yml                   # Plik konfiguracji Docker Compose
+└── .env                                 # Plik główny dla zmiennych środowiskowych
 ```
 
 ## **3. Technologie**
@@ -92,95 +96,96 @@ CashBoard/
 ## **1. Pobranie repozytorium**
 Najpierw należy pobrać repozytorium projektu na lokalny komputer. Upewnij się, że masz zainstalowane `git`, Python oraz Node.js.
 
----
 
 ## **2. Konfiguracja plików `.env`**
+Aby aplikacja działała poprawnie, musisz skonfigurować pliki `.env`.
+
+### **Baza danych**
+W głownym katalogu projektu stwórz plik `.env`:
+
+```plaintext
+POSTGRES_DB=cashboard_db   # Nazwa bazy danych
+POSTGRES_USER=cashboard_user # Użytkownik bazy danych
+POSTGRES_PASSWORD=secure_password # Hasło do bazy danych
+```
 
 ### **Backend**
-W katalogu `backend/backend` utwórz plik `.env` i dodaj następujące dane konfiguracyjne:
+Przejdź do katalogu `backend/backend` i utwórz plik `.env`:
 ```plaintext
-SECRET_KEY=                # Tajny klucz dla Django (możesz wygenerować losowy ciąg znaków)
-POSTGRES_DB=               # Nazwa bazy danych PostgreSQL
-POSTGRES_USER=             # Użytkownik bazy danych PostgreSQL
-POSTGRES_PASSWORD=         # Hasło dla użytkownika bazy danych
-POSTGRES_HOST=             # Adres hosta bazy danych (np. localhost)
-POSTGRES_PORT=             # Port PostgreSQL (domyślnie 5432)
+SECRET_KEY=your_secret_key  # Wygeneruj klucz przy użyciu np. Django: `python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'`
+DEBUG=True                 # Ustaw `True` w trybie development, `False` w produkcji
+POSTGRES_DB=cashboard_db   # Nazwa bazy danych
+POSTGRES_USER=cashboard_user # Użytkownik bazy danych
+POSTGRES_PASSWORD=secure_password # Hasło do bazy danych
+POSTGRES_HOST=db           # Nazwa usługi bazy danych w Docker Compose
+POSTGRES_PORT=5432         # Domyślny port PostgreSQL
 ```
-
 ### **Frontend**
 
-W katalogu `frontend` utwórz plik `.env` i dodaj następujące dane:
-
+Przejdź do katalogu `frontend` i utwórz plik `.env`:
 ```plaintext
-VITE_API_URL=              # URL backendu, np. http://localhost:8000/api
-VITE_HOST=                 # Adres, na którym działa frontend, np. localhost
-VITE_PORT=                 # Port, na którym działa frontend, np. 3000
+VITE_API_URL=http://localhost:8000 # Adres API backendu
+VITE_HOST=0.0.0.0                  # Host frontendu
+VITE_PORT=3000                     # Port frontendu
 ```
 
-### **Wyjaśnienie danych konfiguracyjnych**
-- **SECRET_KEY**: Tajny klucz dla Django, który zapewnia bezpieczeństwo aplikacji. Możesz wygenerować losowy ciąg znaków.
-- **POSTGRES_DB**: Nazwa bazy danych w PostgreSQL.
-- **POSTGRES_USER**: Użytkownik, który ma dostęp do bazy danych.
-- **POSTGRES_PASSWORD**: Hasło dla użytkownika bazy danych.
-- **POSTGRES_HOST**: Host bazy danych. Jeśli działa lokalnie, wpisz `localhost`.
-- **POSTGRES_PORT**: Port bazy danych, zwykle `5432`.
-- **VITE_API_URL**: Adres backendu, z którym komunikuje się frontend (np. `http://localhost:8000/api`).
-- **VITE_HOST**: Adres, na którym frontend jest dostępny (np. `localhost`).
-- **VITE_PORT**: Port, na którym działa frontend (np. `3000`).
+## **3. Uruchomienie aplikacji z Docker Compose**
+Uruchom wszystkie kontenery za pomocą Docker Compose:
+```bash
+docker-compose up -d
+```
+
+To polecenie uruchomi następujące usługi:
+- **db**: PostgreSQL – baza danych.
+- **backend**: Django z Gunicorn – backend aplikacji.
+- **frontend**: React z Vite – frontend aplikacji.
+- **nginx**: Reverse proxy dla frontendu i backendu.
 
 ---
 
-## **3. Przygotowanie wirtualnego środowiska**
-W katalogu głównym projektu utwórz wirtualne środowisko Pythona:
-```bash
-python3 -m venv env
-source env/bin/activate
-```
+## **4. Wykonanie migracji bazy danych**
+Po pierwszym uruchomieniu backendu musisz wykonać migracje bazy danych.
 
-## **4. Instalacja zależności**
+1. Wejdź do kontenera backendu:
+   ```bash
+   docker exec -it django_backend bash
+   ```
+2. Wykonaj migracje:
+    ```bash
+    python manage.py makemigrations
+    python manage.py migrate
+    ```
+3. (Opcjonalnie) Utwórz użytkownika superadmina:
+    ```bash
+    python manage.py createsuperuser
+    ```
+4. Wyjdź z kontenera:
+    ```bash
+    exit
+    ```
 
-### **Backend**
-Przejdź do katalogu `backend` i zainstaluj wymagane zależności:
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### **Frontend**
-Zainstaluj Node.js (jeśli jeszcze go nie masz) i zainstaluj zależności dla Reacta. Przejdź do katalogu `frontend` i uruchom:
-```bash
-cd frontend
-npm install
-```
-
-## **5. Przygotowanie bazy danych**
-W katalogu `backend` wykonaj migracje bazy danych:
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-## **6. Uruchomienie aplikacji**
-
-### **Uruchomienie backendu**
-W katalogu `backend` uruchom serwer Django:
-```bash
-python manage.py runserver <adres_ip>:8000
-```
-Zamień `<adres_ip>` na adres swojego komputera lub wpisz localhost, np. 127.0.0.1:8000.
-
-### **Uruchomienie frontendu**
-W katalogu frontend uruchom środowisko developerskie Reacta:
-```bash
-npm run dev
-```
-
-## **7. Ważne uwagi**
-- Upewnij się, że baza danych PostgreSQL jest skonfigurowana i działa.
-- Backend działa na porcie `8000`, a frontend na porcie `3000` (domyślnie).
+## **5. Sprawdzenie działania aplikacji**
+- **Frontend**: Otwórz w przeglądarce `http://localhost`.
+- **Backend API**: Sprawdź API na `http://localhost`.
 
 ---
 
-Po wykonaniu tych kroków aplikacja powinna być dostępna pod adresem podanym w konfiguracji frontendu (`VITE_HOST` i `VITE_PORT`).
+## **6. Wyłączenie aplikacji**
+Aby zatrzymać kontenery, użyj:
+```bash
+docker-compose down
+```
 
-Gotowe! 🎉
+## **Opcje dodatkowe**
+### **Sprawdzenie logów kontenera**
+- **Kontener**:
+  ```bash
+  docker logs nazwa_kontenera
+  ```
+### **Restart aplikacji**
+Jeśli wprowadzasz zmiany, możesz zrestartować kontenery:
+  ```bash
+  docker-compose restart
+  ```
+
+ 
