@@ -93,18 +93,24 @@ CashBoard/
 
 # **Instrukcja uruchamiania aplikacji CashBoard**
 
-## **1. Klonowanie repozytorium**
-Najpierw pobierz projekt z repozytorium Git:
-```bash
-git clone <URL_REPOZYTORIUM>
-cd CashBoard
-```
+## **1. Pobranie repozytorium**
+Najpierw należy pobrać repozytorium projektu na lokalny komputer. Upewnij się, że masz zainstalowane `git`, Python oraz Node.js.
+
 
 ## **2. Konfiguracja plików `.env`**
 Aby aplikacja działała poprawnie, musisz skonfigurować pliki `.env`.
 
+### **Baza danych**
+W głownym katalogu projektu stwórz plik `.env`:
+
+```plaintext
+POSTGRES_DB=cashboard_db   # Nazwa bazy danych
+POSTGRES_USER=cashboard_user # Użytkownik bazy danych
+POSTGRES_PASSWORD=secure_password # Hasło do bazy danych
+```
+
 ### **Backend**
-Przejdź do katalogu `backend` i utwórz plik `.env`:
+Przejdź do katalogu `backend/backend` i utwórz plik `.env`:
 ```plaintext
 SECRET_KEY=your_secret_key  # Wygeneruj klucz przy użyciu np. Django: `python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'`
 DEBUG=True                 # Ustaw `True` w trybie development, `False` w produkcji
