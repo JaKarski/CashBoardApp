@@ -1,11 +1,10 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // Wczytaj zmienne środowiskowe
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from 'dotenv';
+dotenv.config();
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -13,7 +12,12 @@ export default defineConfig({
     port: parseInt(process.env.VITE_PORT, 10) || 3000,
     strictPort: true,
   },
-})
-
-
-
+  test: {
+    globals: true, // Włącza globalne funkcje testów, np. `describe`, `it`
+    environment: 'jsdom', // Symuluje środowisko przeglądarki
+    setupFiles: './src/setupTests.js', // Plik konfiguracyjny do testów (opcjonalny)
+    coverage: {
+      reporter: ['text', 'html'], // Generowanie raportu pokrycia testami
+    },
+  },
+});
