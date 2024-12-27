@@ -29,8 +29,7 @@ function Form({ route, method }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    // Prepare data for API
+  
     const data = { username, password };
     if (method === "register") {
       data.email = email;
@@ -38,31 +37,37 @@ function Form({ route, method }) {
       data.last_name = lastName;
       data.phone_number = phoneNumber;
     }
-
+  
     try {
       const response = await api.post(route, data);
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, response.data.access);
         localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
-        toast.success("Logged in successfully!"); // Success notification
+        toast.success("Logged in successfully!");
         navigate("/");
       } else {
-        toast.success("Registration successful! Please log in."); // Success notification
+        toast.success("Registration successful! Please log in.");
         navigate("/login");
       }
     } catch (error) {
-      if (error.response && error.response.data) {
-        // Display specific validation errors from the API
-        Object.entries(error.response.data).forEach(([key, messages]) => {
-          messages.forEach((msg) => toast.error(`${key}: ${msg}`));
-        });
+      if (error.response) {
+        if (error.response.status === 401) {
+          toast.error("Incorrect username or password.");
+        } else if (error.response.data) {
+          Object.entries(error.response.data).forEach(([key, messages]) => {
+            messages.forEach((msg) => toast.error(`${key}: ${msg}`));
+          });
+        } else {
+          toast.error("An unexpected error occurred.");
+        }
       } else {
-        toast.error("Something went wrong. Please try again."); // General error
+        toast.error("Network error. Please try again.");
       }
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="form-container">

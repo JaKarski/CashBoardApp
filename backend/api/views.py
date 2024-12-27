@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, status
 from .serializers import UserSerializer, GameSerializer
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser  # Importowanie klas uprawnień
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.exceptions import PermissionDenied, NotFound
@@ -18,15 +18,14 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 
 
-# CreateUserView, jak już było
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny]  # Dostęp dla wszystkich użytkowników
+    permission_classes = [AllowAny]
 
 
 class UserDetailView(APIView):
-    permission_classes = [IsAuthenticated]  # Upewnij się, że użytkownik jest zalogowany
+    permission_classes = [IsAuthenticated] 
 
     def get(self, request):
         user = request.user

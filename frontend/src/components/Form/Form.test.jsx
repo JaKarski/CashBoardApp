@@ -155,4 +155,30 @@ describe("Form Component", () => {
             expect(toast.error).toHaveBeenCalledWith("password: Password is too short.");
         });
     });
+    it("should show error toast for incorrect username or password", async () => {
+        // Mock API response for incorrect login credentials
+        api.post.mockRejectedValueOnce({
+            response: {
+                status: 401, // Unauthorized
+            },
+        });
+    
+        renderWithRouter("login");
+    
+        // Simulate user input for login
+        fireEvent.change(screen.getByLabelText("Username"), {
+            target: { value: "wronguser" },
+        });
+        fireEvent.change(screen.getByLabelText("Password"), {
+            target: { value: "wrongpassword" },
+        });
+    
+        // Click the "Login" button
+        fireEvent.click(screen.getByRole("button", { name: /login/i }));
+    
+        // Wait for the API call and check for the error toast
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith("Incorrect username or password.");
+        });
+    });    
 });
