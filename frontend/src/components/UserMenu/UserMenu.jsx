@@ -38,7 +38,9 @@ const UserMenu = () => {
         // Sprawdzamy odpowiedź serwera
         if (response.status === 200) {
           //alert("Included in the game!");
-          toast.success("Included in the game!");
+          toast.success("Included in the game!", {
+            toastId: "included",
+          });
           navigate(`/game/${roomCode}`);
         }
       } catch (error) {
@@ -47,17 +49,23 @@ const UserMenu = () => {
           // Jeśli użytkownik już jest w grze
           if (error.response.status === 400 && error.response.data.detail === "Already attached to this game.") {
             //alert("Już dołączono do tej gry.");
-            toast.error("You have already join the game");
+            toast.error("You have already join the game", {
+              toastId: "already_in_game",
+            });
             // Przekierowanie do gry, jeśli użytkownik już w niej jest
             navigate(`/game/${roomCode}`);
           } else {
             //alert(error.response.data.detail || "Wystąpił problem podczas dołączania do gry.");
-            toast.error(error.response.data.detail || "Wystąpił problem podczas dołączania do gry.");
+            toast.error(error.response.data.detail || "There was a problem when joining the game.", {
+              toastId: "network_problem",
+            });
           }
         } else {
           console.error("Błąd sieci:", error.message);
           //alert("Wystąpił problem z siecią.");
-          toast.error("There was a problem with the network.")
+          toast.error("There was a problem with the network.", {
+            toastId: "network_problem",
+          });
         }
       }
     }

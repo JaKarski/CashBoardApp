@@ -6,6 +6,7 @@ import api from '../../api';  // Import API do wykonywania zapytań
 import './AdditionalInfoSection.css';
 import EndGameModal from '../EndGameForm/EndGameForm'; // Import formularza jako modala
 
+
 const AdditionalInfoSection = () => {
   const { code } = useParams();  // Pobieramy kod gry z URL
   const [additionalInfo, setAdditionalInfo] = useState({
@@ -28,9 +29,11 @@ const AdditionalInfoSection = () => {
     try {
       const response = await api.get(`/api/games/${code}/additional-data/`);  // Używamy dynamicznego `code` w API
       const gameData = response.data;
+      const blindsValue = parseFloat(gameData.blind) || 0
 
-      const pokerShowdown = (10 * gameData.blinds).toFixed(2) + ' PLN';
-      const win27o = (4 * gameData.blinds).toFixed(2) + ' PLN';
+      const pokerShowdown = (10 * blindsValue).toFixed(2) + ' PLN';
+      const win27o = (4 * blindsValue).toFixed(2) + ' PLN';
+
 
       setAdditionalInfo({
         buyIn: `${gameData.buy_in} PLN`,

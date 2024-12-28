@@ -113,7 +113,13 @@ describe("SuperUserRoute Additional Tests", () => {
         await waitFor(() => {
             expect(screen.queryByText("SuperUser Content")).not.toBeInTheDocument();
         });
-        expect(toast.error).toHaveBeenCalledWith("Nie masz dostępu do tej strony!");
+        expect(toast.error).toHaveBeenCalledWith(
+            "You do not have access to this page!",
+            expect.objectContaining({
+              toastId: "no_access",
+            })
+          );
+          
     });
     it("renders children when access token is valid and user is a superuser", async () => {
         vi.spyOn(Storage.prototype, "getItem").mockImplementation((key) => {

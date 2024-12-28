@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, status
-from .serializers import UserSerializer, GameSerializer
+from .serializers import UserSerializer, GameSerializer, PlayerToGameSerializer, PlayerActionSerializer, GameDataSerializer, GameAdditionalDataSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.utils import timezone
@@ -86,198 +86,182 @@ class GameCreateView(generics.CreateAPIView):
         return Response({"code": self.game_code}, status=status.HTTP_201_CREATED)
 
 
-# Widok do dołączania do gry na podstawie kodu gry
 class JoinGameView(APIView):
-    permission_classes = [IsAuthenticated]  # Tylko zalogowani użytkownicy mogą dołączyć
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        room_code = request.data.get('room_code')  # Pobierz kod gry z żądania
-        user = request.user
+        room_code = request.data.get('room_code')
+        if not room_code:
+            raise ValidationError({"room_code": "This field is required."})
 
-        # Spróbuj znaleźć grę na podstawie kodu
         try:
             game = Game.objects.get(code=room_code)
         except Game.DoesNotExist:
             raise NotFound("The game with the specified code was not found.")
 
-        # Sprawdź, czy użytkownik nie jest już przypisany do tej gry
+        # Check if the game is already ended
+        if game.is_end:
+            raise PermissionDenied("Cannot join a game that has already ended.")
+
+        user = request.user
         if PlayerToGame.objects.filter(player=user, game=game).exists():
             return Response({"detail": "Already attached to this game."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Dodaj użytkownika do gry
         PlayerToGame.objects.create(player=user, game=game)
-
         return Response({"detail": "Included in the game!"}, status=status.HTTP_200_OK)
 
-
-# Widok zwracający listę graczy i ich stacki w grze
 class PlayerListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]  # Wszyscy zalogowani mogą uzyskać dostęp, ale zakres danych będzie różny
+    permission_classes = [IsAuthenticated]
+    serializer_class = PlayerToGameSerializer
 
     def get(self, request, game_code, *args, **kwargs):
-        try:
-            game = Game.objects.get(code=game_code)
-        except Game.DoesNotExist:
-            return Response({"detail": "Gra nie istnieje"}, status=404)
+        game = get_object_or_404(Game, code=game_code)
 
-        # Superużytkownicy widzą wszystkich graczy, zwykli użytkownicy tylko siebie
         if request.user.is_superuser:
             players = PlayerToGame.objects.filter(game=game)
         else:
             players = PlayerToGame.objects.filter(game=game, player=request.user)
 
-        # Dla każdego gracza obliczamy stack
-        player_data = []
-        for player in players:
-            actions = Action.objects.filter(player_to_game=player)
-
-            # Oblicz sumę multiplier * buyin dla danego gracza, lub ustaw na 0 jeśli nie ma akcji
-            stack_sum = actions.aggregate(
-                total_stack=Coalesce(Sum(F('multiplier') * F('player_to_game__game__buy_in')), 0)
-            )['total_stack']
-
-            player_data.append({
-                'name': player.player.username,
-                'stack': stack_sum
-            })
-
-        # Zwracamy listę graczy (dla superużytkownika) lub dane jednego gracza (dla zwykłego użytkownika)
+        serializer = self.serializer_class(players, many=True)
         return Response({
-            'players': player_data,
-            'buy_in': game.buy_in  # Dodajemy buy_in gry do odpowiedzi
+            'players': serializer.data,  # Dane graczy
+            'buy_in': game.buy_in  # Dodajemy buy_in do odpowiedzi
         })
     
 class PlayerActionView(APIView):
-    permission_classes = [IsAuthenticated]  # Każdy zalogowany użytkownik ma dostęp
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, game_code, *args, **kwargs):
-        action_type = request.data.get('action')  # Spodziewamy się "rebuy" lub "back"
-        player_username = request.data.get('username')  # Nick gracza
+        serializer = PlayerActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action_type = serializer.validated_data['action']
+        player_username = serializer.validated_data['username']
         user = request.user
 
-        # Znajdź grę na podstawie kodu
+        # Manual validation of action type
+        if action_type not in ['rebuy', 'back']:
+            return Response({"detail": "Unknown action type."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find the game
         try:
             game = Game.objects.get(code=game_code)
         except Game.DoesNotExist:
-            raise NotFound("Nie znaleziono gry o podanym kodzie.")
+            raise NotFound("Game not found.")
 
-        # Znajdź gracza po nazwie użytkownika (nicku)
+        # Find the player in the game
         try:
-            player_to_game = PlayerToGame.objects.get(player__username=player_username, game=game)
+            player_to_game = PlayerToGame.objects.select_related('player', 'game').get(
+                player__username=player_username, game=game
+            )
         except PlayerToGame.DoesNotExist:
-            raise NotFound(f"Gracz '{player_username}' nie jest przypisany do tej gry.")
+            raise NotFound(f"Player '{player_username}' is not associated with this game.")
 
-        # Obsługa akcji "rebuy" - dostępna dla każdego
+        # Handle rebuy action
         if action_type == 'rebuy':
-            Action.objects.create(player_to_game=player_to_game, multiplier=1)
-            return Response({"detail": f"Rebuy dodany dla {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
+            return self.handle_rebuy(player_to_game)
 
-        # Obsługa akcji "back" - dostępna tylko dla superużytkowników
+        # Handle back action
         elif action_type == 'back':
             if not user.is_superuser:
-                raise PermissionDenied("Tylko superużytkownicy mogą cofnąć rebuy.")
+                raise PermissionDenied("Only superusers can undo a rebuy.")
+            return self.handle_back(player_to_game)
 
-            # Znajdź ostatni rekord akcji i usuń go
-            last_action = Action.objects.filter(player_to_game=player_to_game).order_by('-action_time').first()
-            if last_action:
-                last_action.delete()
-                return Response({"detail": f"Ostatni rebuy cofnięty dla {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"detail": f"Gracz {player_to_game.player.username} nie ma akcji do cofnięcia."}, status=status.HTTP_400_BAD_REQUEST)
+    def handle_rebuy(self, player_to_game):
+        Action.objects.create(player_to_game=player_to_game, multiplier=1)
+        return Response({"detail": f"Rebuy added for {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
 
-        # W przypadku nieznanej akcji
-        return Response({"detail": "Nieznany typ akcji."}, status=status.HTTP_400_BAD_REQUEST)
+    def handle_back(self, player_to_game):
+        last_action = Action.objects.filter(player_to_game=player_to_game).order_by('-action_time').first()
+        if last_action:
+            last_action.delete()
+            return Response({"detail": f"The last rebuy was undone for {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
+        return Response({"detail": f"Player {player_to_game.player.username} has no actions to undo."}, status=status.HTTP_400_BAD_REQUEST)
     
 class CheckPlayerInGameView(APIView):
-    permission_classes = [IsAuthenticated]  # Tylko zalogowani użytkownicy mają dostęp
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, game_code):
-        # Sprawdzamy, czy gra istnieje
+        # Check if the game exists
         try:
             game = Game.objects.get(code=game_code)
         except Game.DoesNotExist:
-            raise NotFound("Gra nie została znaleziona")
+            raise NotFound("Game not found.")
 
-        # Sprawdzamy, czy gra jest zakończona
+        # Check if the game is finished
         if game.is_end:
-            return Response({'is_in_game': False, 'is_game_ended': True}, status=200)
+            return Response(
+                {
+                    'is_in_game': False,
+                    'is_game_ended': True,
+                    'game_code': game_code,
+                },
+                status=status.HTTP_410_GONE,  # Game is finished
+            )
 
-        # Sprawdzamy, czy użytkownik jest przypisany do gry
+        # Check if the user is assigned to the game
         is_in_game = PlayerToGame.objects.filter(player=request.user, game=game).exists()
 
-        # Zwracamy informację o przypisaniu użytkownika do gry i o zakończeniu gry
-        return Response({'is_in_game': is_in_game, 'is_game_ended': False}, status=200)
-
+        # Return information about the user's participation in the game and game status
+        return Response(
+            {
+                'is_in_game': is_in_game,
+                'is_game_ended': False,
+                'game_code': game_code,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class GameDataView(APIView):
-    permission_classes = [IsAuthenticated]  # Tylko zalogowani użytkownicy mogą uzyskać dostęp do danych
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access the data
 
     def get(self, request, game_code):
         try:
-            # Znajdź grę na podstawie kodu gry
+            # Retrieve the game by its code
             game = Game.objects.get(code=game_code)
         except Game.DoesNotExist:
-            return Response({"detail": "Gra nie została znaleziona"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Game not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Sprawdź, czy użytkownik jest przypisany do gry
-        is_player_in_game = PlayerToGame.objects.filter(player=request.user, game=game).exists()
+        # Check if the user is assigned to the game
+        if not PlayerToGame.objects.filter(player=request.user, game=game).exists():
+            # Raise 403 Forbidden if the user is not assigned to the game
+            raise PermissionDenied("You do not have access to this game.")
 
-        if not is_player_in_game:
-            # Jeśli użytkownik nie jest przypisany do gry, zwróć błąd 403 (Forbidden)
-            raise PermissionDenied("Nie masz dostępu do tej gry.")
-
-        # Pobieranie danych o grze, jeśli użytkownik jest przypisany do gry
-        blinds = game.blind
-        game_start_time = game.start_time
-
-        # Pobieranie liczby graczy
-        number_of_players = PlayerToGame.objects.filter(game=game).count()
-
-        # Pobieranie wszystkich akcji graczy i obliczanie sumy
+        # Calculate the total money on the table from player actions
         total_money_on_table = Action.objects.filter(player_to_game__game=game).aggregate(
             total=Sum(F('multiplier') * F('player_to_game__game__buy_in'))
-        )['total'] or 0  # Jeśli brak akcji, ustaw na 0
+        )['total'] or 0  # Default to 0 if there are no actions
 
-        # Obliczanie średniego stacka
+        # Count the number of players in the game
+        number_of_players = PlayerToGame.objects.filter(game=game).count()
+
+        # Calculate the average stack
         avg_stack = total_money_on_table / number_of_players if number_of_players > 0 else 0
 
-        # Zwracamy dane gry
-        return Response({
-            'blinds': blinds,
-            'game_start_time': game_start_time,
+        # Prepare data for the serializer
+        data = {
+            'blinds': game.blind,
+            'game_start_time': game.start_time,
             'money_on_table': total_money_on_table,
             'number_of_players': number_of_players,
-            'avg_stack': avg_stack
-        }, status=status.HTTP_200_OK)
-    
+            'avg_stack': avg_stack,
+        }
+
+        # Serialize the data and return the response
+        serializer = GameDataSerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class GameAdditionalDataView(APIView):
-    permission_classes = [IsAuthenticated]  # Tylko zalogowani użytkownicy mogą uzyskać dostęp
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, game_code):
         try:
-            game = Game.objects.get(code=game_code)
+            # Use the proper related_name to filter
+            game = Game.objects.filter(code=game_code, players__player=request.user).distinct().get()
         except Game.DoesNotExist:
-            return Response({"detail": "Gra nie została znaleziona"}, status=status.HTTP_404_NOT_FOUND)
+            raise PermissionDenied("You do not have access to this game or the game does not exist.")
 
-        # Sprawdzenie, czy użytkownik jest przypisany do gry
-        is_player_in_game = PlayerToGame.objects.filter(player=request.user, game=game).exists()
-
-        if not is_player_in_game:
-            # Jeśli użytkownik nie jest przypisany do gry, zwróć błąd 403 (Forbidden)
-            raise PermissionDenied("Nie masz dostępu do tej gry.")
-
-        # Zwracanie dodatkowych danych o grze
-        return Response({
-            'buy_in': game.buy_in,
-            'blinds': game.blind,
-            'how_many_plo': game.how_many_plo,
-            'how_often_stand_up': game.how_often_stand_up,
-            'is_poker_jackpot': game.is_poker_jackpot,
-            'is_win_27': game.is_win_27,
-        }, status=status.HTTP_200_OK)
-
-
+        serializer = GameAdditionalDataSerializer(game)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class EndGameView(APIView):
     permission_classes = [IsAuthenticated]

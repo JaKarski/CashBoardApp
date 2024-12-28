@@ -1,103 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../../api';  // Importuj API do wykonywania zapytań
+import api from '../../api'; // Import API for server requests
+import { formatTime } from '../../utils/timeUtils'; // Utility for time formatting
 import './GameSection.css';
 
 const GameSection = () => {
-  const { code } = useParams();  // Pobieramy kod gry z URL
-  // Stan przechowujący dane o grze
+  const { code } = useParams(); // Retrieve the game code from the URL
+
+  // State to hold game data
   const [gameData, setGameData] = useState({
-    blinds: 0.50,
-    gameStartTime: null, // Czas rozpoczęcia gry, który będzie podawany przez serwer
+    blinds: 0.5,
+    gameStartTime: null, // Server-provided game start time
     moneyOnTable: 0,
     numberOfPlayers: 0,
-    avgStack: 0
+    avgStack: 0,
   });
 
-  // Stan do przechowywania czasu gry (timer)
+  // State for game timer
   const [gameTime, setGameTime] = useState('0:00:00');
-  
-  // Użyj bezpośredniej ścieżki do pliku w folderze public
-  const hourSound = new Audio('/hour.mp3'); // Ścieżka do pliku hour.mp3 w folderze public
+  const [lastPlayedHour, setLastPlayedHour] = useState(null); // Track last played hour for sound
 
-  // Funkcja formatująca czas do formatu hh:mm:ss
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-  };
+  const hourSound = useRef(new Audio('/hour.mp3')); // UseRef for audio
 
-  // Funkcja do aktualizacji timera
+  // Update the timer based on start time
   const updateTimer = (startTime) => {
     const now = new Date();
-    const elapsedTime = Math.floor((now - new Date(startTime)) / 1000); // Różnica w sekundach
+    const elapsedTime = Math.floor((now - new Date(startTime)) / 1000); // Calculate elapsed time in seconds
     setGameTime(formatTime(elapsedTime));
   };
 
-  // Funkcja pobierająca dane z serwera
+  // Fetch game data from the server
   const fetchGameData = async () => {
     try {
-      const response = await api.get(`/api/games/${code}/data/`);  // Wywołanie serwera z API
+      const response = await api.get(`/api/games/${code}/data/`);
       const data = response.data;
+
+      if (!data.game_start_time || !data.blinds) {
+        throw new Error('Invalid data from API');
+      }
 
       setGameData({
         blinds: data.blinds,
-        gameStartTime: new Date(data.game_start_time), // Konwersja na Date
+        gameStartTime: new Date(data.game_start_time),
         moneyOnTable: data.money_on_table,
         numberOfPlayers: data.number_of_players,
-        avgStack: data.avg_stack
+        avgStack: data.avg_stack,
       });
 
-      // Zaktualizuj timer po pobraniu nowych danych o grze
       updateTimer(data.game_start_time);
     } catch (error) {
-      console.error('Błąd podczas pobierania danych o grze:', error);
+      console.error('Error fetching game data:', error);
     }
   };
 
-  // Timer - aktualizuje co sekundę
+  // Timer effect to update game time every second
   useEffect(() => {
     let timerInterval;
     if (gameData.gameStartTime) {
       timerInterval = setInterval(() => {
-        updateTimer(gameData.gameStartTime);  // Aktualizujemy czas gry co sekundę
+        updateTimer(gameData.gameStartTime);
       }, 1000);
     }
 
-    return () => clearInterval(timerInterval); // Wyczyść timer po odmontowaniu komponentu
-  }, [gameData.gameStartTime]);  // Timer zależy tylko od czasu rozpoczęcia gry
+    return () => clearInterval(timerInterval); // Clear timer on unmount
+  }, [gameData.gameStartTime]);
 
-  // Pobieranie danych co kilka sekund
+  // Fetch game data at regular intervals
   useEffect(() => {
-    fetchGameData();  // Pobierz dane przy pierwszym renderze
+    fetchGameData(); // Fetch data on first render
 
     const dataFetchInterval = setInterval(() => {
-      fetchGameData(); // Pobieraj dane z serwera co 10 sekund
-    }, 1000);  // Aktualizacja co 10 sekund
+      fetchGameData(); // Fetch data every 10 seconds
+    }, 1000);
 
-    return () => clearInterval(dataFetchInterval);  // Wyczyść interwał po odmontowaniu komponentu
-  }, [code]);  // Pobieranie danych zależy od zmiennej code (kod gry)
+    return () => clearInterval(dataFetchInterval); // Clear interval on unmount
+  }, [code]);
 
-  // Sprawdzanie i odtwarzanie dźwięku co pełną godzinę
+  // Play sound on the full hour
   useEffect(() => {
     const [hours, minutes, seconds] = gameTime.split(':').map(Number);
 
-    if (minutes === 0 && seconds === 0) {
-      // Odtwórz dźwięk, gdy minuty i sekundy wynoszą 00
-      hourSound.play().catch((error) => {
-        console.log("Error playing sound:", error);
+    if (minutes === 0 && seconds === 0 && lastPlayedHour !== hours) {
+      hourSound.current.play().catch((error) => {
+        console.log('Error playing sound:', error);
       });
+      setLastPlayedHour(hours);
     }
-  }, [gameTime, hourSound]);
+  }, [gameTime, lastPlayedHour]);
 
+  // Main component rendering
   return (
     <div className="game-section">
       <h1>CashBoard</h1>
       <div className="game-info">
         <p>Blinds: {gameData.blinds / 2}/{gameData.blinds}</p>
         <p>Game time:</p>
-        <h1 className="timer">{gameTime}</h1> {/* Zwiększony timer */}
+        <h1 className="timer">{gameTime}</h1>
         <p>Money on the table: {gameData.moneyOnTable.toFixed(2)} PLN</p>
         <p>Number of players: {gameData.numberOfPlayers}</p>
         <p>Avg stack: {gameData.avgStack.toFixed(2)} PLN</p>

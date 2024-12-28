@@ -18,7 +18,6 @@ function Form({ route, method }) {
 
   const name = method === "login" ? "Login" : "Register";
 
-  // Check if user is already logged in
   useEffect(() => {
     const accessToken = localStorage.getItem(ACCESS_TOKEN);
     if (accessToken) {
@@ -29,7 +28,7 @@ function Form({ route, method }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     const data = { username, password };
     if (method === "register") {
       data.email = email;
@@ -37,9 +36,10 @@ function Form({ route, method }) {
       data.last_name = lastName;
       data.phone_number = phoneNumber;
     }
-  
+
     try {
       const response = await api.post(route, data);
+
       if (method === "login") {
         localStorage.setItem(ACCESS_TOKEN, response.data.access);
         localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
@@ -50,24 +50,29 @@ function Form({ route, method }) {
         navigate("/login");
       }
     } catch (error) {
-      if (error.response) {
-        if (error.response.status === 401) {
-          toast.error("Incorrect username or password.");
-        } else if (error.response.data) {
-          Object.entries(error.response.data).forEach(([key, messages]) => {
-            messages.forEach((msg) => toast.error(`${key}: ${msg}`));
-          });
-        } else {
-          toast.error("An unexpected error occurred.");
-        }
-      } else {
-        toast.error("Network error. Please try again.");
-      }
+      handleErrors(error);
     } finally {
       setLoading(false);
     }
   };
-  
+
+  const handleErrors = (error) => {
+    if (error.response) {
+      if (error.response.status === 401) {
+        toast.error("Incorrect username or password.");
+      } else if (error.response.data) {
+        Object.entries(error.response.data).forEach(([key, messages]) => {
+          messages.forEach((msg) => {
+            toast.error(`${key}: ${msg}`);
+          });
+        });
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } else {
+      toast.error("Network error. Please try again.");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="form-container">
@@ -78,12 +83,12 @@ function Form({ route, method }) {
         <input
           className="form-input"
           type="text"
-          id="username"   
+          id="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder=" "
         />
-        <label className="form-label" htmlFor="username">Username</label> {/* Add htmlFor */}
+        <label className="form-label" htmlFor="username">Username</label>
       </div>
 
       {/* Password field */}
@@ -91,12 +96,12 @@ function Form({ route, method }) {
         <input
           className="form-input"
           type="password"
-          id="password"   
+          id="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder=" "
         />
-        <label className="form-label" htmlFor="password">Password</label> {/* Add htmlFor */}
+        <label className="form-label" htmlFor="password">Password</label>
       </div>
 
       {/* Additional fields for registration */}
@@ -106,45 +111,45 @@ function Form({ route, method }) {
             <input
               className="form-input"
               type="tel"
-              id="phoneNumber"  
+              id="phoneNumber"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder=" "
             />
-            <label className="form-label" htmlFor="phoneNumber">Phone Number</label> {/* Add htmlFor */}
+            <label className="form-label" htmlFor="phoneNumber">Phone Number</label>
           </div>
           <div className="form-group">
             <input
               className="form-input"
               type="email"
-              id="email"  
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder=" "
             />
-            <label className="form-label" htmlFor="email">Email</label> {/* Add htmlFor */}
+            <label className="form-label" htmlFor="email">Email</label>
           </div>
           <div className="form-group">
             <input
               className="form-input"
               type="text"
-              id="firstName"  
+              id="firstName"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder=" "
             />
-            <label className="form-label" htmlFor="firstName">First Name</label> {/* Add htmlFor */}
+            <label className="form-label" htmlFor="firstName">First Name</label>
           </div>
           <div className="form-group">
             <input
               className="form-input"
               type="text"
-              id="lastName"  
+              id="lastName"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder=" "
             />
-            <label className="form-label" htmlFor="lastName">Last Name</label> {/* Add htmlFor */}
+            <label className="form-label" htmlFor="lastName">Last Name</label>
           </div>
         </>
       )}

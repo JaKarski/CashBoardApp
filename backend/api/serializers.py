@@ -1,8 +1,10 @@
 from django.contrib.auth.models import User
-from .models import Game, PlayerToGame, UserProfile
+from .models import Game, PlayerToGame, UserProfile, Action
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from rest_framework.exceptions import ValidationError
+from django.db.models import Sum, F
+from django.db.models.functions import Coalesce
+
 
 class UserSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(write_only=True, required=True)  # Now it's required
@@ -60,8 +62,6 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-
-
 class GameSerializer(serializers.ModelSerializer):
     creator = UserSerializer(read_only=True)  # Display creator details but make it read-only
     code = serializers.CharField(read_only=True)  # Game code is auto-generated and cannot be manually set
@@ -77,10 +77,41 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class PlayerToGameSerializer(serializers.ModelSerializer):
-    player = UserSerializer(read_only=True)  # Serializator dla gracza (player)
-    game = GameSerializer(read_only=True)  # Serializator dla gry (game)
-    join_time = serializers.DateTimeField(read_only=True)  # Pole automatycznie ustawiane
+    name = serializers.CharField(source='player.username', read_only=True)  # Dodajemy pole name
+    stack = serializers.SerializerMethodField()  # Pole stack obliczane dynamicznie
 
     class Meta:
         model = PlayerToGame
-        fields = ['player', 'game', 'join_time']  # Pola, które chcemy zwrócić w odpowiedzi
+        fields = ['name', 'stack']  # Wybieramy tylko potrzebne pola
+
+    def get_stack(self, obj):
+        # Obliczamy stack dla danego PlayerToGame
+        actions = Action.objects.filter(player_to_game=obj)
+        return actions.aggregate(
+            total_stack=Coalesce(Sum(F('multiplier') * F('player_to_game__game__buy_in')), 0)
+        )['total_stack']
+
+class PlayerActionSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['rebuy', 'back'])
+    username = serializers.CharField(max_length=150)
+
+class GameDataSerializer(serializers.Serializer):
+    blinds = serializers.CharField()
+    game_start_time = serializers.DateTimeField()
+    money_on_table = serializers.FloatField()
+    number_of_players = serializers.IntegerField()
+    avg_stack = serializers.FloatField()
+
+class GameAdditionalDataSerializer(serializers.ModelSerializer):
+    blind = serializers.FloatField()
+    class Meta:
+        model = Game
+        fields = [
+            'buy_in',
+            'blind',
+            'how_many_plo',
+            'how_often_stand_up',
+            'is_poker_jackpot',
+            'is_win_27',
+        ]
+

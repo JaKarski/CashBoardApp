@@ -25,7 +25,6 @@ function RegisterAndLogout() {
 function App() {
   return (
     <BrowserRouter>
-      {/* Global ToastContainer */}
       <ToastContainer
         position="top-right"
         autoClose={3000}
