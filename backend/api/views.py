@@ -16,6 +16,7 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
 from datetime import datetime, timedelta
+from django.db import transaction
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -37,7 +38,6 @@ class UserDetailView(APIView):
         })
 
 
-# MyTokenObtainPairView, jak już było
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
@@ -55,34 +55,33 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
         return response
 
-# Obiektowy widok do sprawdzania statusu superużytkownika
+
 class CheckSuperuserStatusView(APIView):
-    permission_classes = [IsAuthenticated]  # Tylko dla zalogowanych użytkowników
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Sprawdzamy, czy użytkownik jest superużytkownikiem
         is_superuser = request.user.is_superuser
         return Response({'is_superuser': is_superuser})
-    
 
-# Widok do tworzenia nowej gry za pomocą POST
+
 class GameCreateView(generics.CreateAPIView):
     queryset = Game.objects.all()
     serializer_class = GameSerializer
-    permission_classes = [IsAdminUser]  # Tylko superużytkownicy mogą tworzyć gry
+    permission_classes = [IsAdminUser]  # Only admin users can create games
 
     def perform_create(self, serializer):
-        # Zapisujemy nową grę, przypisując twórcę (creator) jako zalogowanego użytkownika
-        game = serializer.save(creator=self.request.user)
+        with transaction.atomic():
+            # Save the new game and set the creator as the logged-in user
+            game = serializer.save(creator=self.request.user)
 
-        # Po stworzeniu gry, przypiszmy twórcę gry do tej gry jako gracza
-        PlayerToGame.objects.create(player=self.request.user, game=game)
+            # Assign the creator to the game as a player
+            PlayerToGame.objects.create(player=self.request.user, game=game)
 
-        # Zwracamy kod gry w odpowiedzi
-        self.game_code = game.code
+            # Store the game code to return in the response
+            self.game_code = game.code
 
     def post(self, request, *args, **kwargs):
-        # Nadpisanie metody post, aby zwrócić kod gry po utworzeniu
+        # Override the POST method to include the game code in the response
         response = super().post(request, *args, **kwargs)
         return Response({"code": self.game_code}, status=status.HTTP_201_CREATED)
 
@@ -99,16 +98,16 @@ class JoinGameView(APIView):
         try:
             game = Game.objects.get(code=room_code)
         except Game.DoesNotExist:
-            raise NotFound("Nie znaleziono gry o podanym kodzie.")
+            raise NotFound("The game with the specified code was not found.")
 
         # Sprawdź, czy użytkownik nie jest już przypisany do tej gry
         if PlayerToGame.objects.filter(player=user, game=game).exists():
-            return Response({"detail": "Już dołączono do tej gry."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Already attached to this game."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Dodaj użytkownika do gry
         PlayerToGame.objects.create(player=user, game=game)
 
-        return Response({"detail": "Dołączono do gry!"}, status=status.HTTP_200_OK)
+        return Response({"detail": "Included in the game!"}, status=status.HTTP_200_OK)
 
 
 # Widok zwracający listę graczy i ich stacki w grze

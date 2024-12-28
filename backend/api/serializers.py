@@ -63,9 +63,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GameSerializer(serializers.ModelSerializer):
-    creator = UserSerializer(read_only=True)  # Wyświetl dane o twórcy gry, ale nie można ich modyfikować
-    code = serializers.CharField(read_only=True)  # Kod gry jest generowany automatycznie, więc nie można go podać ręcznie
-    start_time = serializers.DateTimeField(read_only=True)  # Automatyczne pole ustawiane przy tworzeniu gry
+    creator = UserSerializer(read_only=True)  # Display creator details but make it read-only
+    code = serializers.CharField(read_only=True)  # Game code is auto-generated and cannot be manually set
+    start_time = serializers.DateTimeField(read_only=True)  # Automatically set when the game is created
 
     class Meta:
         model = Game
@@ -74,6 +74,7 @@ class GameSerializer(serializers.ModelSerializer):
             'game_time', 'blind', 'how_many_plo', 'how_often_stand_up', 
             'is_poker_jackpot', 'is_win_27', 'creator'
         ]
+
 
 class PlayerToGameSerializer(serializers.ModelSerializer):
     player = UserSerializer(read_only=True)  # Serializator dla gracza (player)
