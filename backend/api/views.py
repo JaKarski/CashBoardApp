@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, status
-from .serializers import UserSerializer, GameSerializer, PlayerToGameSerializer, PlayerActionSerializer, GameDataSerializer, GameAdditionalDataSerializer
+from .serializers import UserSerializer, GameSerializer, PlayerToGameSerializer, PlayerActionSerializer, GameDataSerializer, GameAdditionalDataSerializer, PlayerDataSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -110,6 +110,7 @@ class JoinGameView(APIView):
         PlayerToGame.objects.create(player=user, game=game)
         return Response({"detail": "Included in the game!"}, status=status.HTTP_200_OK)
 
+
 class PlayerListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PlayerToGameSerializer
@@ -127,7 +128,8 @@ class PlayerListView(generics.ListAPIView):
             'players': serializer.data,  # Dane graczy
             'buy_in': game.buy_in  # Dodajemy buy_in do odpowiedzi
         })
-    
+
+
 class PlayerActionView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -176,7 +178,8 @@ class PlayerActionView(APIView):
             last_action.delete()
             return Response({"detail": f"The last rebuy was undone for {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
         return Response({"detail": f"Player {player_to_game.player.username} has no actions to undo."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class CheckPlayerInGameView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -210,6 +213,7 @@ class CheckPlayerInGameView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
 
 class GameDataView(APIView):
     permission_classes = [IsAuthenticated]  # Only authenticated users can access the data
@@ -250,6 +254,7 @@ class GameDataView(APIView):
         serializer = GameDataSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class GameAdditionalDataView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -263,68 +268,58 @@ class GameAdditionalDataView(APIView):
         serializer = GameAdditionalDataSerializer(game)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class EndGameView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, game_code, *args, **kwargs):
-        # Sprawdzenie czy użytkownik jest superuserem
         if not request.user.is_superuser:
-            raise PermissionDenied("Tylko superużytkownicy mogą zakończyć grę.")
+            raise PermissionDenied("Only superusers can end the game.")
 
-        # Pobieranie gry
         game = get_object_or_404(Game, code=game_code)
+        serializer = PlayerDataSerializer(data=request.data.get('players', []), many=True)
+        serializer.is_valid(raise_exception=True)
 
-        # Pobieranie danych graczy z żądania
-        players_data = request.data.get('players', [])
-        
+        players_data = serializer.validated_data
+
+        # Check for empty list of players
         if not players_data:
-            return Response({"detail": "Brak danych graczy."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "No player data provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Tworzenie statystyk dla każdego gracza
+        players = User.objects.filter(username__in=[p['player'] for p in players_data])
+        if players.count() != len(players_data):
+            return Response({"detail": "Some players do not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        total_balance = sum(player.get('cash_out', 0) - player.get('buy_in', 0) for player in players_data)
+        if total_balance != 0:
+            return Response(
+                {"detail": "The total difference between 'cash_out' and 'buy_in' must be 0."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         for player_data in players_data:
-            player_name = player_data.get('player')
-            buy_in = player_data.get('buy_in', 0)
-            cash_out = player_data.get('cash_out', 0)
-
-            # Znajdź gracza w tabeli User
-            try:
-                player = User.objects.get(username=player_name)
-            except User.DoesNotExist:
-                return Response({"detail": f"Gracz {player_name} nie istnieje."}, status=status.HTTP_404_NOT_FOUND)
-
-            # Znajdź PlayerToGame
+            player = players.get(username=player_data['player'])
             player_to_game = PlayerToGame.objects.filter(player=player, game=game).first()
 
             if not player_to_game:
-                return Response({"detail": f"Gracz {player_name} nie bierze udziału w tej grze."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"detail": f"Player {player.username} is not part of this game."}, status=status.HTTP_404_NOT_FOUND)
 
-            # Zapisz dane w tabeli Statistics
             Statistics.objects.create(
                 player_to_game=player_to_game,
-                buy_in=Decimal(buy_in),
-                cash_out=Decimal(cash_out),
+                buy_in=Decimal(player_data['buy_in']),
+                cash_out=Decimal(player_data['cash_out']),
                 cash_out_time=timezone.now()
             )
 
-        # Wywołanie funkcji do rozliczania długów
         self.settle_debts(players_data, game)
-
-
-        # Oznacz grę jako zakończoną
         game.is_end = True
         game.end_time = timezone.now()
-
-        # Oblicz różnicę czasu między startem a zakończeniem gry
-        time_diff = game.end_time - game.start_time
-
-        # Zapisz czas gry jako timedelta w game_time
-        game.game_time = time_diff
-
-        
-
+        game.game_time = game.end_time - game.start_time
         game.save()
 
-        return Response({"detail": "Gra zakończona pomyślnie."}, status=status.HTTP_200_OK)
+        return Response({"detail": "The game has been successfully ended."}, status=status.HTTP_200_OK)
+
+
 
     def settle_debts(self, players_data, game):
         # Przygotowanie listy graczy z saldami
@@ -379,6 +374,7 @@ class EndGameView(APIView):
                 creditors.pop(0)
 
 
+#before
 class UserStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -432,7 +428,7 @@ class UserStatsView(APIView):
             'win_rate': round(win_rate, 2),
             'total_buyin': round(total_buyin, 2),
         })
-    
+
 
 class DebtSettlementView(APIView):
     permission_classes = [IsAuthenticated]
@@ -479,7 +475,7 @@ class DebtSettlementView(APIView):
         ]
 
         return Response(outgoing + incoming)
-    
+
 
 class SendDebtView(APIView):
     permission_classes = [IsAuthenticated]
@@ -496,6 +492,7 @@ class SendDebtView(APIView):
 
         return Response({"detail": "Debt sent successfully!"}, status=status.HTTP_200_OK)
 
+
 class AcceptDebtView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -510,7 +507,6 @@ class AcceptDebtView(APIView):
         debt.save()
 
         return Response({"detail": "Debt accepted successfully!"}, status=status.HTTP_200_OK)
-    
 
 
 class UserPlotDataView(APIView):
@@ -548,3 +544,4 @@ class UserPlotDataView(APIView):
             'single_game_results': single_game_results,
             'cumulative_results': cumulative_results,
         })
+    

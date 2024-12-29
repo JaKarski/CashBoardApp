@@ -91,9 +91,11 @@ class PlayerToGameSerializer(serializers.ModelSerializer):
             total_stack=Coalesce(Sum(F('multiplier') * F('player_to_game__game__buy_in')), 0)
         )['total_stack']
 
+
 class PlayerActionSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=['rebuy', 'back'])
     username = serializers.CharField(max_length=150)
+
 
 class GameDataSerializer(serializers.Serializer):
     blinds = serializers.CharField()
@@ -101,6 +103,7 @@ class GameDataSerializer(serializers.Serializer):
     money_on_table = serializers.FloatField()
     number_of_players = serializers.IntegerField()
     avg_stack = serializers.FloatField()
+
 
 class GameAdditionalDataSerializer(serializers.ModelSerializer):
     blind = serializers.FloatField()
@@ -114,4 +117,10 @@ class GameAdditionalDataSerializer(serializers.ModelSerializer):
             'is_poker_jackpot',
             'is_win_27',
         ]
+
+
+class PlayerDataSerializer(serializers.Serializer):
+    player = serializers.CharField()
+    buy_in = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
+    cash_out = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
 
