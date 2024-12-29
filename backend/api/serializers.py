@@ -124,3 +124,13 @@ class PlayerDataSerializer(serializers.Serializer):
     buy_in = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
     cash_out = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
 
+
+class UserStatsSerializer(serializers.Serializer):
+    earn = serializers.DecimalField(max_digits=10, decimal_places=2)
+    games_played = serializers.IntegerField()
+    total_play_time = serializers.DecimalField(max_digits=10, decimal_places=2)
+    hourly_rate = serializers.DecimalField(max_digits=10, decimal_places=2)
+    highest_win = serializers.DecimalField(max_digits=10, decimal_places=2)
+    average_stake = serializers.DecimalField(max_digits=10, decimal_places=2)
+    win_rate = serializers.DecimalField(max_digits=10, decimal_places=2)
+    total_buyin = serializers.DecimalField(max_digits=10, decimal_places=2)

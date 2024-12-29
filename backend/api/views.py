@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics, status
-from .serializers import UserSerializer, GameSerializer, PlayerToGameSerializer, PlayerActionSerializer, GameDataSerializer, GameAdditionalDataSerializer, PlayerDataSerializer
+from .serializers import UserSerializer, GameSerializer, PlayerToGameSerializer, PlayerActionSerializer, GameDataSerializer, GameAdditionalDataSerializer, PlayerDataSerializer, UserStatsSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -10,9 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import Game, PlayerToGame, Action, Statistics, Debts
-from django.db.models import Sum, F
-from django.db.models import Sum, Max, F, ExpressionWrapper, DecimalField
-from django.db.models.functions import Coalesce
+from django.db.models import Sum, F, DurationField, Avg, ExpressionWrapper, Max
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
 from datetime import datetime, timedelta
@@ -374,51 +372,39 @@ class EndGameView(APIView):
                 creditors.pop(0)
 
 
-#before
 class UserStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
 
-        # Pobieranie statystyk z tabeli Statistics
-        stats = Statistics.objects.filter(player_to_game__player=user)
+        # Pobieranie statystyk
+        stats = Statistics.objects.filter(player_to_game__player=user).aggregate(
+            total_earn=Sum(F('cash_out') - F('buy_in')),
+            highest_win=Max(F('cash_out') - F('buy_in')),
+            total_buy_in=Sum('buy_in'),
+            total_cash_out=Sum('cash_out'),
+            average_stake=Avg('buy_in'),
+        )
 
-        # Earn - Suma cash_out - buy_in
-        total_earn = stats.aggregate(total_earn=Sum(F('cash_out') - F('buy_in')))['total_earn'] or Decimal(0)
+        games = Game.objects.filter(players__player=user).annotate(
+            duration=ExpressionWrapper(F('end_time') - F('start_time'), output_field=DurationField())
+        )
 
-        # Games Played - Liczba gier, w których gracz brał udział
+        # Obliczenia
+        total_play_time = games.aggregate(total_time=Sum('duration'))['total_time'] or timedelta()
+        total_hours_played = Decimal(total_play_time.total_seconds() / 3600)
+        total_earn = stats['total_earn'] or Decimal(0)
+        highest_win = stats['highest_win'] or Decimal(0)
+        total_buy_in = stats['total_buy_in'] or Decimal(0)
+        total_cash_out = stats['total_cash_out'] or Decimal(0)
+        average_stake = stats['average_stake'] or Decimal(0)
+        win_rate = (total_cash_out / total_buy_in) if total_buy_in else Decimal(0)
+        hourly_rate = (total_earn / total_hours_played) if total_hours_played else Decimal(0)
         games_played = PlayerToGame.objects.filter(player=user).count()
 
-        # Total Play Time - Suma czasu gry (obliczenie timedelta)
-        games = Game.objects.filter(players__player=user)
-        total_play_time = timedelta()
-
-        for game in games:
-            if game.end_time and game.start_time:
-                total_play_time += game.end_time - game.start_time
-
-        # Przekształcenie timedelta na godziny
-        total_hours_played = Decimal(total_play_time.total_seconds() / 3600)
-
-        # Highest Win - Największa wygrana (cash_out - buy_in)
-        highest_win = stats.aggregate(highest_win=Max(F('cash_out') - F('buy_in')))['highest_win'] or Decimal(0)
-
-        # Average Stake - Średni buy-in
-        average_stake = stats.aggregate(average_stake=Sum('buy_in') / games_played)['average_stake'] or Decimal(0)
-
-        # Win Rate - Suma buy-in / suma cash_out
-        total_buy_in = stats.aggregate(total_buy_in=Sum('buy_in'))['total_buy_in'] or Decimal(0)
-        total_cash_out = stats.aggregate(total_cash_out=Sum('cash_out'))['total_cash_out'] or Decimal(0)
-        win_rate = (total_cash_out / total_buy_in) if total_buy_in != Decimal(0) else Decimal(0)
-
-        # Hourly Rate - Zarobek na godzinę
-        hourly_rate = (total_earn / total_hours_played) if total_hours_played > Decimal(0) else Decimal(0)
-
-        # Total Buy-in
-        total_buyin = total_buy_in
-
-        return Response({
+        # Dane do serializatora
+        data = {
             'earn': round(total_earn, 2),
             'games_played': games_played,
             'total_play_time': round(total_hours_played, 2),
@@ -426,8 +412,11 @@ class UserStatsView(APIView):
             'highest_win': round(highest_win, 2),
             'average_stake': round(average_stake, 2),
             'win_rate': round(win_rate, 2),
-            'total_buyin': round(total_buyin, 2),
-        })
+            'total_buyin': round(total_buy_in, 2),
+        }
+
+        serializer = UserStatsSerializer(data)
+        return Response(serializer.data)
 
 
 class DebtSettlementView(APIView):
@@ -441,14 +430,18 @@ class DebtSettlementView(APIView):
             sender=user,
             is_send=False,
             is_accepted=False
-        ).select_related('reciver__userprofile').values('id', 'reciver__username', 'reciver__userprofile__phone_number', 'amount')
+        ).select_related('reciver__userprofile', 'game').values(
+            'id', 'reciver__username', 'reciver__userprofile__phone_number', 'amount', 'game__start_time'
+        )
 
         # Pobieranie długów, gdzie użytkownik otrzymał pieniądze, ale nie zaakceptował (is_send=True, is_accepted=False)
         incoming_debts = Debts.objects.filter(
             reciver=user,
             is_send=True,
             is_accepted=False
-        ).select_related('sender__userprofile').values('id', 'sender__username', 'sender__userprofile__phone_number', 'amount')
+        ).select_related('sender__userprofile', 'game').values(
+            'id', 'sender__username', 'sender__userprofile__phone_number', 'amount', 'game__start_time'
+        )
 
         outgoing = [
             {
@@ -456,8 +449,9 @@ class DebtSettlementView(APIView):
                 'to': debt['reciver__username'],
                 'from': user.username,
                 'money': debt['amount'],
-                'phone_number': debt['reciver__userprofile__phone_number'],  # Dodano numer telefonu
-                'type': 'outgoing'
+                'phone_number': debt['reciver__userprofile__phone_number'],
+                'type': 'outgoing',
+                'game_date': debt['game__start_time'].strftime('%d-%m-%Y') if debt['game__start_time'] else None
             }
             for debt in outgoing_debts
         ]
@@ -468,8 +462,9 @@ class DebtSettlementView(APIView):
                 'to': user.username,
                 'from': debt['sender__username'],
                 'money': debt['amount'],
-                'phone_number': debt['sender__userprofile__phone_number'],  # Dodano numer telefonu
-                'type': 'incoming'
+                'phone_number': debt['sender__userprofile__phone_number'],
+                'type': 'incoming',
+                'game_date': debt['game__start_time'].strftime('%d-%m-%Y') if debt['game__start_time'] else None
             }
             for debt in incoming_debts
         ]

@@ -162,7 +162,7 @@ function Form({ route, method }) {
       {/* Switch between login and register */}
       {method === "login" ? (
         <p className="switch-form">
-          Don't have an account? <a href="/register" className="switch-link">Register</a>
+          Don't have an account? {/*<a href="/register" className="switch-link">Register</a>*/} Contact us!
         </p>
       ) : (
         <p className="switch-form">

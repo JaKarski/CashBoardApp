@@ -5,6 +5,10 @@ import MyStats from "../../components/MyStats/MyStats";
 import DebtSettlement from "../../components/DebtSettlement/DebtSettlement";
 import UserPlot from "../../components/UserPlot/UserPlot";
 import api from '../../api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 const Home = () => {
   const [username, setUsername] = useState('');
 
@@ -14,7 +18,9 @@ const Home = () => {
         const response = await api.get('/api/user/');
         setUsername(response.data.username); 
       } catch (error) {
-        console.error("Błąd podczas pobierania danych użytkownika:", error);
+        toast.error("Error fetching user data. Please try again.", {
+          toastId: "fetch_user_error",
+        });
       }
     };
 
@@ -24,7 +30,7 @@ const Home = () => {
   return (
     <div className="home-container">
       <UserMenu />
-      <h1>Welcome {username}</h1>  {/* Wyświetlanie nazwy użytkownika */}
+      <h1>Welcome {username}</h1>  {/* Displaying the username */}
       <div className="content-grid">
         <MyStats />
         <DebtSettlement />
