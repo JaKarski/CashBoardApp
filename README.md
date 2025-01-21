@@ -189,3 +189,24 @@ Jeśli wprowadzasz zmiany, możesz zrestartować kontenery:
   ```
 
  
+---
+
+# **Testy jednostkowe**
+- **Frontend**:
+  
+  Aby uruchomić testy jednostkowe dla części frontendowej, przejdź do katalogu `frontend` i uruchom poniższą komendę:
+  ```bash
+  npm run test
+  ```
+  Upewnij się, że masz zainstalowane wszystkie zależności (`npm install`), zanim uruchomisz testy.
+- **Backend**:
+  
+  Aby uruchomić testy jednostkowe dla części backendowej, upewnij się, że kontener z backendem oraz baza danych są uruchomione. Następnie, w terminalu, wykonaj poniższą komendę:
+  ```bash
+  docker-compose exec backend python manage.py test
+  ```
+  Pamiętaj, że przed uruchomieniem testów kontener musi być włączony, a baza danych poprawnie skonfigurowana w pliku `docker-compose.yml` oraz plikach `.env`.
+
+## **Dodatkowe informacje:**
+- Testy frontendowe są uruchamiane za pomocą Vitest (w przypadku Vite), a backendowe za pomocą Django's Test Framework.
+- Testy backendowe wymagają kontenera z uruchomioną aplikacją oraz bazą danych, aby testy mogły działać na pełnym środowisku.

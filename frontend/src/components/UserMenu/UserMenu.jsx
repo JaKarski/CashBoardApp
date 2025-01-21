@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from "react-toastify"; // Import toast for notifications
+import "react-toastify/dist/ReactToastify.css"; // Import default styles
 import { useNavigate } from 'react-router-dom';
 import { FiUser } from 'react-icons/fi';
 import api from "../../api";
@@ -35,23 +37,35 @@ const UserMenu = () => {
   
         // Sprawdzamy odpowiedź serwera
         if (response.status === 200) {
-          alert("Dołączono do gry!");
+          //alert("Included in the game!");
+          toast.success("Included in the game!", {
+            toastId: "included",
+          });
           navigate(`/game/${roomCode}`);
         }
       } catch (error) {
         // Obsługa błędów
         if (error.response) {
           // Jeśli użytkownik już jest w grze
-          if (error.response.status === 400 && error.response.data.detail === "Już dołączono do tej gry.") {
-            alert("Już dołączono do tej gry.");
+          if (error.response.status === 400 && error.response.data.detail === "Already attached to this game.") {
+            //alert("Już dołączono do tej gry.");
+            toast.error("You have already join the game", {
+              toastId: "already_in_game",
+            });
             // Przekierowanie do gry, jeśli użytkownik już w niej jest
             navigate(`/game/${roomCode}`);
           } else {
-            alert(error.response.data.detail || "Wystąpił problem podczas dołączania do gry.");
+            //alert(error.response.data.detail || "Wystąpił problem podczas dołączania do gry.");
+            toast.error(error.response.data.detail || "There was a problem when joining the game.", {
+              toastId: "network_problem",
+            });
           }
         } else {
           console.error("Błąd sieci:", error.message);
-          alert("Wystąpił problem z siecią.");
+          //alert("Wystąpił problem z siecią.");
+          toast.error("There was a problem with the network.", {
+            toastId: "network_problem",
+          });
         }
       }
     }
@@ -91,7 +105,7 @@ const UserMenu = () => {
 
   return (
     <div className="user-menu-container" ref={menuRef}>
-      <div className="avatar" onClick={toggleMenu}>
+      <div className="avatar" role="button" onClick={toggleMenu}>
         <FiUser size={24} />
       </div>
       {isOpen && (
@@ -104,7 +118,7 @@ const UserMenu = () => {
                 onChange={(e) => setRoomCode(e.target.value)}
                 className="form-input"
                 required
-                placeholder=" "
+                placeholder="Room code"
               />
               <label className="form-label">Room code</label>
             </div>

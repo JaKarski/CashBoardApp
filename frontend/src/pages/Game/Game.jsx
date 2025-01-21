@@ -4,40 +4,65 @@ import PlayersSection from "../../components/PlayerSection/PlayerSection";
 import GameSection from '../../components/GameSection/GameSection';
 import AdditionalInfoSection from '../../components/AdditionalInfoSection/AdditionalInfoSection';
 import api from '../../api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './Game.css';
 
 const Game = () => {
-  const { code } = useParams();  // Pobieramy dynamiczny parametr 'code' z URL
-  const [isInGame, setIsInGame] = useState(null);  // Ustawiamy stan do sprawdzania, czy użytkownik jest w grze
-  const [isGameEnded, setIsGameEnded] = useState(null);  // Stan do sprawdzania, czy gra jest zakończona
-  const navigate = useNavigate();  // Używamy navigate do przekierowań
+  const { code } = useParams(); // Get dynamic parameter 'code' from URL
+  const [isInGame, setIsInGame] = useState(null); // State to check if the user is in the game
+  const [isGameEnded, setIsGameEnded] = useState(null); // State to check if the game is ended
+  const [loading, setLoading] = useState(true); // Loading state for better UX
+  const navigate = useNavigate(); // Navigation hook
 
-  // Funkcja do sprawdzenia, czy użytkownik jest przypisany do gry oraz czy gra jest zakończona
+  // Function to check if the user is in the game and if the game is ended
   const checkPlayerInGame = async () => {
     try {
-      const response = await api.get(`api/games/${code}/check-player/`);  // Wysyłamy zapytanie do serwera, aby sprawdzić, czy użytkownik jest przypisany do gry
+      const response = await api.get(`api/games/${code}/check-player/`);
       if (response.status === 200) {
         setIsInGame(response.data.is_in_game);
-        setIsGameEnded(response.data.is_game_ended);  // Ustawiamy stan na podstawie odpowiedzi serwera
+        setIsGameEnded(response.data.is_game_ended);
+        if (!response.data.is_in_game) {
+          toast.warning("You are not assigned to this game.", {
+            toastId: "not-assigned",
+          });
+        }
       }
     } catch (error) {
-      console.error('Błąd podczas sprawdzania statusu gracza:', error);
-      setIsInGame(false);  // W przypadku błędu również ustawiamy isInGame na false
+      if (error.response?.status === 410) {
+        toast.info("This game has ended.", {
+          toastId: "game-ended",
+        });
+        setIsGameEnded(true);
+        setIsInGame(false);
+      } else if (error.response?.status === 404) {
+        toast.error("Game not found.", {
+          toastId: "game-not-found",
+        });
+        setIsInGame(false);
+      } else {
+        toast.error("An unexpected error occurred. Please try again later.", {
+          toastId: "unexpected-error",
+        });
+        setIsInGame(false);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    checkPlayerInGame();  // Sprawdzamy status przypisania użytkownika do gry po załadowaniu komponentu
-  }, [code]);  // Zależność od code, aby ponownie sprawdzić przy zmianie kodu gry
+    checkPlayerInGame(); // Check the user's status in the game on component mount
+  }, [code]); // Dependency on 'code' to re-check when game code changes
 
   useEffect(() => {
-    if (isInGame === false || isGameEnded === true) {
-      navigate('/');  // Przekierowanie na stronę główną, jeśli użytkownik nie jest w grze lub gra jest zakończona
+    if (!loading && (isInGame === false || isGameEnded === true)) {
+      navigate('/'); // Redirect to the homepage if the user is not in the game or the game is ended
     }
-  }, [isInGame, isGameEnded, navigate]);
+  }, [isInGame, isGameEnded, loading, navigate]);
 
-  if (isInGame === null || isGameEnded === null) {
-    return <div>Loading...</div>;  // Wyświetlamy komunikat "Loading..." dopóki nie sprawdzimy przypisania i statusu gry
+  if (loading) {
+    return <div>Loading...</div>; // Show a loading message until the status is checked
   }
 
   return (

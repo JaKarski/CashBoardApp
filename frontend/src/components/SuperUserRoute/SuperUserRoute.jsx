@@ -57,12 +57,16 @@ function SuperUserRoute({ children }) {
                 setIsSuperUser(true);
             } else {
                 setIsSuperUser(false);
-                toast.error("Nie masz dostępu do tej strony!");  // Powiadomienie o braku dostępu
+                toast.error("You do not have access to this page!", {
+                            toastId: "no_access",
+                          });
             }
         } catch (error) {
             console.log(error);
             setIsSuperUser(false);
-            toast.error("Nie masz dostępu do tej strony!");  // Powiadomienie o braku dostępu
+            toast.error("You do not have access to this page!", {
+                toastId: "no_access",
+              });
         }
     };
 

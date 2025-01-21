@@ -1,148 +1,176 @@
 import { useState, useEffect } from "react";
-import api from "../../api";
+import { toast } from "react-toastify"; // Import toast for notifications
+import "react-toastify/dist/ReactToastify.css"; // Import default styles
+import api from "../../api"; // Replace with your actual API module
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../constants";
-import "./Form.css"
+import "./Form.css"; // Replace with your actual CSS file
 
 function Form({ route, method }) {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [email, setEmail] = useState("");           // Stan dla email
-    const [firstName, setFirstName] = useState("");   // Stan dla imienia
-    const [lastName, setLastName] = useState("");     // Stan dla nazwiska
-    const [phoneNumber, setPhoneNumber] = useState("");     // Stan dla nazwiska
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const name = method === "login" ? "Login" : "Register";
+  const name = method === "login" ? "Login" : "Register";
 
-    // Sprawdzanie, czy użytkownik jest zalogowany
-    useEffect(() => {
-        const accessToken = localStorage.getItem(ACCESS_TOKEN);
-        if (accessToken) {
-            navigate("/"); // Jeśli użytkownik ma token, przekieruj go na stronę główną
-        }
-    }, [navigate]);
+  useEffect(() => {
+    const accessToken = localStorage.getItem(ACCESS_TOKEN);
+    if (accessToken) {
+      navigate("/"); // Redirect to the homepage if the user is already logged in
+    }
+  }, [navigate]);
 
-    const handleSubmit = async (e) => {
-        setLoading(true);
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-        // Zbierz dane dla loginu lub rejestracji
-        const data = { username, password };
-        if (method === "register") {
-            data.email = email;
-            data.first_name = firstName;
-            data.last_name = lastName;
-            data.phone_number = phoneNumber;
-        }
+    const data = { username, password };
+    if (method === "register") {
+      data.email = email;
+      data.first_name = firstName;
+      data.last_name = lastName;
+      data.phone_number = phoneNumber;
+    }
 
-        try {
-            const res = await api.post(route, data);
-            if (method === "login") {
-                localStorage.setItem(ACCESS_TOKEN, res.data.access);
-                localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-                navigate("/");
-            } else {
-                navigate("/login");
-            }
-        } catch (error) {
-            alert(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    try {
+      const response = await api.post(route, data);
 
-    return (
-        <form onSubmit={handleSubmit} className="form-container">
-            <h1>{name}</h1>
+      if (method === "login") {
+        localStorage.setItem(ACCESS_TOKEN, response.data.access);
+        localStorage.setItem(REFRESH_TOKEN, response.data.refresh);
+        toast.success("Logged in successfully!");
+        navigate("/");
+      } else {
+        toast.success("Registration successful! Please log in.");
+        navigate("/login");
+      }
+    } catch (error) {
+      handleErrors(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            {/* Pole użytkownika */}
-            <div className="form-group">
-                <input
-                    className="form-input"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder=" "
-                />
-                <label className="form-label">Username</label>
-            </div>
+  const handleErrors = (error) => {
+    if (error.response) {
+      if (error.response.status === 401) {
+        toast.error("Incorrect username or password.");
+      } else if (error.response.data) {
+        Object.entries(error.response.data).forEach(([key, messages]) => {
+          messages.forEach((msg) => {
+            toast.error(`${key}: ${msg}`);
+          });
+        });
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } else {
+      toast.error("Network error. Please try again.");
+    }
+  };
 
-            {/* Pole hasła */}
-            <div className="form-group">
-                <input
-                    className="form-input"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder=" "
-                />
-                <label className="form-label">Password</label>
-            </div>
+  return (
+    <form onSubmit={handleSubmit} className="form-container">
+      <h1>{name}</h1>
 
-            {/* Dodatkowe pola dla rejestracji */}
-            {method === "register" && (
-                <>
-                    <div className="form-group">
-                        <input
-                            className="form-input"
-                            type="tel"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            placeholder=" "
-                        />
-                        <label className="form-label">Phone Number</label>
-                    </div>
-                    <div className="form-group">
-                        <input
-                            className="form-input"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder=" "
-                        />
-                        <label className="form-label">Email</label>
-                    </div>
-                    <div className="form-group">
-                        <input
-                            className="form-input"
-                            type="text"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            placeholder=" "
-                        />
-                        <label className="form-label">First Name</label>
-                    </div>
-                    <div className="form-group">
-                        <input
-                            className="form-input"
-                            type="text"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            placeholder=" "
-                        />
-                        <label className="form-label">Last Name</label>
-                    </div>
-                </>
-            )}
+      {/* Username field */}
+      <div className="form-group">
+        <input
+          className="form-input"
+          type="text"
+          id="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder=" "
+        />
+        <label className="form-label" htmlFor="username">Username</label>
+      </div>
 
-            <button className="form-button" type="submit" disabled={loading}>
-                {loading ? "Loading..." : name}
-            </button>
+      {/* Password field */}
+      <div className="form-group">
+        <input
+          className="form-input"
+          type="password"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder=" "
+        />
+        <label className="form-label" htmlFor="password">Password</label>
+      </div>
 
-            {/* Dodajemy przyciski zmiany między logowaniem i rejestracją */}
-            {method === "login" ? (
-                <p className="switch-form">
-                    Don't have an account? <a href="/register" className="switch-link">Register</a>
-                </p>
-            ) : (
-                <p className="switch-form">
-                    Already have an account? <a href="/login" className="switch-link">Login</a>
-                </p>
-            )}
-        </form>
-    );
+      {/* Additional fields for registration */}
+      {method === "register" && (
+        <>
+          <div className="form-group">
+            <input
+              className="form-input"
+              type="tel"
+              id="phoneNumber"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder=" "
+            />
+            <label className="form-label" htmlFor="phoneNumber">Phone Number</label>
+          </div>
+          <div className="form-group">
+            <input
+              className="form-input"
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder=" "
+            />
+            <label className="form-label" htmlFor="email">Email</label>
+          </div>
+          <div className="form-group">
+            <input
+              className="form-input"
+              type="text"
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder=" "
+            />
+            <label className="form-label" htmlFor="firstName">First Name</label>
+          </div>
+          <div className="form-group">
+            <input
+              className="form-input"
+              type="text"
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder=" "
+            />
+            <label className="form-label" htmlFor="lastName">Last Name</label>
+          </div>
+        </>
+      )}
+
+      {/* Submit button */}
+      <button className="form-button" type="submit" disabled={loading}>
+        {loading ? "Loading..." : name}
+      </button>
+
+      {/* Switch between login and register */}
+      {method === "login" ? (
+        <p className="switch-form">
+          Don't have an account? {/*<a href="/register" className="switch-link">Register</a>*/} Contact us!
+        </p>
+      ) : (
+        <p className="switch-form">
+          Already have an account? <a href="/login" className="switch-link">Login</a>
+        </p>
+      )}
+    </form>
+  );
 }
 
 export default Form;
