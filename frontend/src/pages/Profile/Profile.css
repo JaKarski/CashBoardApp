@@ -1,0 +1,36 @@
+.profile-page {
+  display: flex;
+  flex-direction: row; /* Ustawienie poziomego układu */
+  gap: 20px;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.user-section, .game-section, .stat-section {
+  flex: 1; /* Równomierny podział miejsca między sekcjami */
+  border-radius: 15px;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  text-align: center;  /* Wyrównanie tekstu do lewej */
+  padding: 20px;
+  margin: 20px auto;
+  color: white;
+  ;
+}
+
+ h2 {
+  font-size: 1.8em;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+      flex-direction: column; /* Ustawienie pionowego układu */
+  }
+
+  .user-section, .game-section, .stat-section {
+      max-width: 90%;
+      padding: 15px;
+  }
+}

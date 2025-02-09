@@ -119,6 +119,7 @@ POSTGRES_USER=cashboard_user # Użytkownik bazy danych
 POSTGRES_PASSWORD=secure_password # Hasło do bazy danych
 POSTGRES_HOST=db           # Nazwa usługi bazy danych w Docker Compose
 POSTGRES_PORT=5432         # Domyślny port PostgreSQL
+ALLOWED_HOSTS=localhost    # Host upowazniony do korzystania z backednu
 ```
 ### **Frontend**
 

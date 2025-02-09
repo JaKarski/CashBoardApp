@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import SuperUserRoute from "./components/SuperUserRoute/SuperUserRoute";
 import Game from "./pages/Game/Game";
+import Profile from "./pages/Profile/Profile";
 import WorkInProgress from "./pages/WorkInProgress/WorkInProgress";
 import GameForm from "./pages/GameForm/GameForm";
 import { ToastContainer } from "react-toastify";
@@ -69,6 +70,16 @@ function App() {
             <ProtectedRoute>
               <SuperUserRoute>
                 <GameForm />
+              </SuperUserRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <SuperUserRoute>
+                <Profile />
               </SuperUserRoute>
             </ProtectedRoute>
           }
