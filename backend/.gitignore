@@ -90,3 +90,5 @@ db.sqlite3
 
 /static
 /api/migrations/0*
+
+celerybeat-schedule
