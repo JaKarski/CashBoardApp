@@ -33,6 +33,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./backend/staticfiles:/app/staticfiles
 
   celery:
     build:
@@ -84,9 +85,9 @@ services:
       - frontend
       - backend
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./backend/static:/static
-      - ./backend/media:/media
+        - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+        - ./backend/staticfiles:/app/staticfiles/  
+        - ./backend/media:/app/media/
 
 volumes:
   postgres_data:

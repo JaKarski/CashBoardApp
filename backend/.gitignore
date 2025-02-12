@@ -92,3 +92,5 @@ db.sqlite3
 /api/migrations/0*
 
 celerybeat-schedule
+static
+staticfiles
