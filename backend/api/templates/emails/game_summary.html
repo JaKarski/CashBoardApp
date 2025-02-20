@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Podsumowanie gry pokerowej</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        }
+        h2, h3 {
+            color: #ffcc00;
+            text-align: center;
+        }
+        p {
+            color: #bbbbbb;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .summary {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #292929;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .summary p {
+            margin: 5px 0;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #252525;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: center;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        th {
+            background-color: #333;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #2a2a2a;
+        }
+        .reminder {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+            color: #ffcc00;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #bbbbbb;
+        }
+
+        /* Mobile Styles */
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 90%;
+                padding: 15px;
+            }
+            th, td {
+                padding: 6px;
+                font-size: 12px;
+            }
+            h2, h3 {
+                font-size: 18px;
+            }
+            .summary {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>♠️ Podsumowanie gry pokerowej ♠️</h2>
+
+        <p>Cześć,</p>
+        <p>Gra, w której brałeś udział, właśnie się zakończyła. Podsyłamy Ci krótkie sprawozdanie z wynikami oraz szczegółowym rozliczeniem.</p>
+
+        <div class="summary">
+            <p><strong>⏳ Czas trwania gry:</strong> {{ game_duration }} h</p>
+            <p><strong>💵 Wpisowe:</strong> {{ buy_in }} zł</p>
+            <p><strong>💰 Wypłata:</strong> {{ cash_out }} zł</p>
+            <p><strong>💲 Łączna pula na stole:</strong> {{ total_pot }} zł</p>
+            <p><strong>📊 Średni stack:</strong> {{ avg_stack }} zł</p>
+            <p><strong>📈 Twój zarobek:</strong> {{ profit }} zł</p>
+            <p><strong>🚀 Zarobek na godzinę:</strong> {{ profit_per_hour }} zł/h</p>
+        </div>
+
+        <h3>💳 Rozliczenie transakcji</h3>
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>Gra</th>
+                    <th>Kwota</th>
+                    <th>Nadawca</th>
+                    <th>Odbiorca</th>
+                    <th>Telefon</th>
+                </tr>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.game }}</td>
+                    <td>{{ transaction.amount }} zł</td>
+                    <td>{{ transaction.sender }}</td>
+                    <td>{{ transaction.receiver }}</td>
+                    <td>{{ transaction.phone }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="reminder">
+            📢 Jeśli wysłałeś lub otrzymałeś pieniądze od innego gracza, nie zapomnij tego zaznaczyć w aplikacji.
+        </div>
+
+        <p class="footer">Pozdrawiamy,<br>Jednoosobowy zespół ToughSpot</p>
+    </div>
+
+</body>
+</html>
