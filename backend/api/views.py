@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404
 from decimal import Decimal
 from datetime import datetime, timedelta
 from django.db import transaction
+from api.tasks import send_game_summary_email
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -280,7 +281,6 @@ class EndGameView(APIView):
 
         players_data = serializer.validated_data
 
-        # Check for empty list of players
         if not players_data:
             return Response({"detail": "No player data provided."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -309,26 +309,61 @@ class EndGameView(APIView):
                 cash_out_time=timezone.now()
             )
 
-        self.settle_debts(players_data, game)
+        # Tworzenie listy transakcji do wysyłki e-maila
+        transactions = self.settle_debts(players_data, game)
+
         game.is_end = True
         game.end_time = timezone.now()
         game.game_time = game.end_time - game.start_time
         game.save()
 
-        return Response({"detail": "The game has been successfully ended."}, status=status.HTTP_200_OK)
+        # **Wywołanie Celery Taska dla każdego gracza**
+        for player_data in players_data:
+            player = players.get(username=player_data['player'])
+            if player.email:  # Sprawdzamy, czy gracz ma e-mail w bazie
+                # Obliczamy czas trwania gry w godzinach
+                game_duration = Decimal(game.game_time.total_seconds()) / Decimal(3600) if game.game_time else Decimal(0)
 
+                # Wartości buy-in i cash-out dla danego gracza (upewniamy się, że to Decimal)
+                buy_in = Decimal(player_data["buy_in"])
+                cash_out = Decimal(player_data["cash_out"])
 
+                # Obliczamy całkowitą pulę pieniędzy na stole
+                total_pot = sum(Decimal(p["cash_out"]) for p in players_data)
+
+                # Obliczamy średni stack, zapobiegając dzieleniu przez 0
+                avg_stack = Decimal(total_pot) / Decimal(len(players_data)) if len(players_data) > 0 else Decimal(0)
+
+                # Obliczamy zarobek danego gracza
+                profit = cash_out - buy_in
+
+                # Obliczamy zarobek na godzinę, zapobiegając dzieleniu przez 0
+                profit_per_hour = profit / game_duration if game_duration > 0 else Decimal(0)
+
+                # Tworzymy finalny słownik game_data
+                game_data = {
+                    "game_date": str(game.start_time.date()),  
+                    "game_duration": round(game_duration, 2),
+                    "buy_in": buy_in,
+                    "cash_out": cash_out,
+                    "total_pot": total_pot,
+                    "avg_stack": round(avg_stack, 2),
+                    "profit": profit,
+                    "profit_per_hour": round(profit_per_hour, 2),
+                }
+
+                # Wysyłamy e-mail przez Celery (asynchronicznie)
+                send_game_summary_email.delay(player.email, game_data, transactions)
+
+        return Response({"detail": "The game has been successfully ended and emails have been sent."}, status=status.HTTP_200_OK)
 
     def settle_debts(self, players_data, game):
-        # Przygotowanie listy graczy z saldami
         players = []
 
         for player_data in players_data:
             player_name = player_data.get('player')
             buy_in = player_data.get('buy_in', 0)
             cash_out = player_data.get('cash_out', 0)
-
-            # Obliczenie salda (wygrane - buy-in)
             balance = cash_out - buy_in
 
             players.append({
@@ -336,27 +371,29 @@ class EndGameView(APIView):
                 'balance': balance
             })
 
-        # Podziel graczy na dłużników i wierzycieli
         debtors = [p for p in players if p['balance'] < 0]
         creditors = [p for p in players if p['balance'] > 0]
 
-        # Tworzenie transakcji
+        transactions = []
+
         while debtors and creditors:
             debtor = debtors[0]
             creditor = creditors[0]
 
-            # Kwota transakcji to mniejsza z wartości długu i kredytu
             transaction_amount = min(-debtor['balance'], creditor['balance'])
 
-            # Zaktualizowanie sald
             debtor['balance'] += transaction_amount
             creditor['balance'] -= transaction_amount
 
-            # Znalezienie użytkowników w tabeli User
             debtor_user = User.objects.get(username=debtor['username'])
             creditor_user = User.objects.get(username=creditor['username'])
 
-            # Zapisanie długów w tabeli Debts
+            try:
+                creditor_phone = creditor_user.userprofile.phone_number
+            except AttributeError:  # Jeśli użytkownik nie ma powiązanego profilu
+                creditor_phone = "Brak numeru"
+
+            # Zapisujemy dług w bazie
             Debts.objects.create(
                 game=game,
                 amount=Decimal(transaction_amount),
@@ -365,11 +402,21 @@ class EndGameView(APIView):
                 is_send=False
             )
 
-            # Usuń graczy z listy jeśli saldo wynosi 0
+            # Dodajemy transakcję do listy (teraz zawiera numer telefonu)
+            transactions.append({
+                "game": game.code,
+                "amount": float(transaction_amount),
+                "sender": debtor_user.username,
+                "receiver": creditor_user.username,
+                "phone": creditor_phone  # Teraz pobieramy numer poprawnie
+            })
+
             if debtor['balance'] == 0:
                 debtors.pop(0)
             if creditor['balance'] == 0:
                 creditors.pop(0)
+
+        return transactions  # Transakcje z numerami telefonów są gotowe do wysyłki
 
 
 class UserStatsView(APIView):

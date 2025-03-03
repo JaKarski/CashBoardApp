@@ -150,10 +150,12 @@ Po pierwszym uruchomieniu backendu musisz wykonać migracje bazy danych.
    ```bash
    docker exec -it django_backend bash
    ```
-2. Wykonaj migracje:
+2. Wykonaj migracje oraz zebranie plików statycznych:
     ```bash
     python manage.py makemigrations
     python manage.py migrate
+    Na później do poprawy
+    python manage.py collectstatic --noinput   
     ```
 3. (Opcjonalnie) Utwórz użytkownika superadmina:
     ```bash
