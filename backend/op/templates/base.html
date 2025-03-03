@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Piece Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+        }
+        .sidebar {
+            height: 100vh;
+            background-color: #1e1e1e;
+            overflow-y: auto;
+        }
+        .episode-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+        }
+        .episode-item:hover {
+            background-color: #333;
+        }
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .watched {
+            background-color: rgba(40, 167, 69, 0.2) !important; 
+            box-shadow: 0px 0px 10px rgba(40, 167, 69, 0.5);
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">One Piece Tracker</a>
+            <div class="d-flex">
+                {% if user.is_authenticated %}
+                    <span class="navbar-text me-3">Welcome, {{ user.username }}</span>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% if user.is_authenticated %}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar with episode list -->
+            <div class="col-md-3 sidebar p-3 position-relative">
+                <div class="sticky-top bg-dark p-2">
+                    <h4>Episode List</h4>
+                    <input type="text" class="form-control mb-2" placeholder="Search..." id="searchInput">
+                </div>
+                <div id="episodes-list">
+                    {% for episode in episodes %}
+                        <div class="episode-item {% if episode.id in watched_episodes %}watched{% endif %}" 
+                            id="episode-{{ episode.id }}" 
+                            onclick="showEpisode({{ episode.id }}, '{{ episode.number }}', '{{ episode.title_en|escapejs }}', '{{ episode.title_pl|escapejs }}', '{{ episode.release_date }}', '{{ episode.description|escapejs }}')">
+                            <span>
+                                <span class="badge {% if episode.is_filler %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                                    {{ episode.number }}
+                                </span>
+                                {{ episode.title_en }}
+                            </span>
+                            <button class="btn btn-sm {% if episode.id in watched_episodes %}btn-danger{% else %}btn-success{% endif %} check-btn" 
+                                    data-episode-id="{{ episode.id }}">
+                                {% if episode.id in watched_episodes %}❌{% else %}✔{% endif %}
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Main section -->
+            <div class="col-md-9 p-4">
+                <h2>Currently Watching</h2>
+                <div id="current-episode" class="mb-4">
+                    <h3>Select an episode</h3>
+                    <p>Episode details will appear here.</p>
+                </div>
+
+                <!-- Statistics Section -->
+                <div id="statistics" class="mt-4">
+                    <h2 class="mb-3">📊 Statistics</h2>
+                
+                    <div class="row">
+                        <!-- Wykres progress -->
+                        <div class="col-md-6">
+                            <div class="card bg-dark text-white p-3">
+                                <h5 class="card-title">📈 Viewing Progress</h5>
+                                <canvas id="progressChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Wykres miesięczny -->
+                        <div class="col-md-6">
+                            <div class="card bg-dark text-white p-3">
+                                <h5 class="card-title">📆 Monthly Progress</h5>
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Statystyki oglądania -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card bg-dark text-white p-3">
+                                <h5 class="card-title">⏳ Viewing Speed</h5>
+                                <table class="table table-dark table-striped">
+                                    <tr><td>📅 First Watched:</td><td>{{ first_watched }}</td></tr>
+                                    <tr><td>📆 Last Counted Date:</td><td>{{ last_watched }}</td></tr>
+                                    <tr><td>📅 Total Days Watching:</td><td>{{ days_watching }}</td></tr>
+                                    <tr><td>🎬 Episodes per Day:</td><td>{{ avg_episodes_per_day }}</td></tr>
+                                    <tr><td>⏱ Minutes per Day:</td><td>{{ avg_minutes_per_day }}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                
+                        <div class="col-md-6">
+                            <div class="card bg-dark text-white p-3">
+                                <h5 class="card-title">🎯 Completion Estimate</h5>
+                                <table class="table table-dark table-striped">
+                                    <tr><td>🏁 Estimated Completion:</td><td>{{ estimated_end_date }}</td></tr>
+                                    <tr><td>⚡ Required Episodes/Day:</td><td>{{ required_episodes_per_day }}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Najdłuższy maraton -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card bg-dark text-white p-3">
+                                <h5 class="card-title">🔥 Longest Marathon</h5>
+                                <table class="table table-dark table-striped">
+                                    <tr><td>📅 Date:</td><td>{{ max_marathon_day }}</td></tr>
+                                    <tr><td>🎬 Episodes Watched:</td><td>{{ max_marathon_count }}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="text-center">
+            <h2>You need to log in to use the application!</h2>
+            <p><a href="{% url 'login' %}" class="btn btn-primary mt-3">Login</a></p>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function showEpisode(id, number, title_en, title_pl, release_date, description) {
+            document.getElementById("current-episode").innerHTML = `
+                <h3>Episode ${number}: ${title_en}</h3>
+                <p><strong>Polish Title:</strong> ${title_pl}</p>
+                <p><strong>Release Date:</strong> ${release_date}</p>
+                <p><strong>Description:</strong> ${description ? description : "No description available."}</p>
+            `;
+        }
+
+        function updateProgressChart() {
+            let ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Watched', 'Remaining'],
+                    datasets: [{
+                        data: [{{ watched_count }}, {{ remaining_count }}],
+                        backgroundColor: ['#007bff', '#444']
+                    }]
+                }
+            });
+        }
+
+        function updateMonthlyChart() {
+            let ctx = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ monthly_labels|safe }},  // Nazwy miesięcy
+                    datasets: [{
+                        label: 'Episodes Watched',
+                        data: {{ monthly_counts|safe }},  // Ilość obejrzanych w miesiącach
+                        backgroundColor: '#888'
+                    }]
+                }
+            });
+        }
+
+        document.querySelectorAll('.check-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                let episodeId = this.getAttribute('data-episode-id');
+                fetch(`mark-as-watched/${episodeId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'watched') {
+                        let episodeItem = document.getElementById(`episode-${data.episode_id}`);
+                        episodeItem.classList.add('watched');
+                        let button = episodeItem.querySelector('.check-btn');
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-danger');
+                        button.innerHTML = '❌';
+                    } else if (data.status === 'unwatched') {
+                        let episodeItem = document.getElementById(`episode-${data.episode_id}`);
+                        episodeItem.classList.remove('watched');
+                        let button = episodeItem.querySelector('.check-btn');
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-success');
+                        button.innerHTML = '✔';
+                    }
+                    updateProgressChart();
+                    updateMonthlyChart();
+                });
+            });
+        });
+        document.getElementById("searchInput").addEventListener("input", function () {
+            let input = this.value.toLowerCase();
+            let episodes = document.querySelectorAll(".episode-item");
+    
+            episodes.forEach(episode => {
+                let title = episode.innerText.toLowerCase();
+                episode.style.display = title.includes(input) ? "" : "none";
+            });
+        });
+    
+        function scrollToFirstUnwatched() {
+            let firstUnwatched = document.querySelector(".episode-item:not(.watched)");
+            if (firstUnwatched) {
+                firstUnwatched.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }
+    
+        window.onload = function () {
+            updateProgressChart();
+            updateMonthlyChart();
+            scrollToFirstUnwatched();
+        };
+        
+    </script>
+
+</body>
+</html>
