@@ -3,22 +3,21 @@ import { splitDataAtZero } from '../../utils/splitData';
 import LineChart from './LineChart';
 import ColumnChart from './ColumnChart';
 import './UserPlot.css';
-import api from '../../api';  // Zakładam, że masz gotowy moduł API do komunikacji z backendem
+import api from '../../api'; 
 
 const UserPlot = () => {
-  const [isFullscreen, setIsFullscreen] = useState(false); // Stan pełnoekranowy
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [plotData, setPlotData] = useState({
     labels: [],
     single_game_results: [],
     cumulative_results: []
   });
 
-  // Pobieranie danych z API po załadowaniu komponentu
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await api.get('/api/user/plot-data/');
-        setPlotData(response.data);  // Ustawiamy dane dla wykresów
+        setPlotData(response.data); 
       } catch (error) {
         console.error("Błąd podczas pobierania danych do wykresu:", error);
       }
@@ -28,12 +27,11 @@ const UserPlot = () => {
   }, []);
 
   const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen); // Zmieniamy stan pełnoekranowy
+    setIsFullscreen(!isFullscreen);
   };
 
-  // Rozdzielenie danych na dodatnie i ujemne wyniki dla LineChart
   const { labels, positive, negative, pointRadiusPositive, pointRadiusNegative } = splitDataAtZero(
-    plotData.labels.map(date => new Date(date)),  // Konwersja dat na obiekty Date
+    plotData.labels.map(date => new Date(date)),
     plotData.cumulative_results
   );
 
@@ -41,14 +39,12 @@ const UserPlot = () => {
     <div className={`plot-section ${isFullscreen ? 'fullscreen' : ''}`}>
       <h2>Plots</h2>
 
-      {/* Przycisk powiększenia */}
       {!isFullscreen && (
         <button className="fullscreen-btn" onClick={toggleFullscreen}>
-          &#x26F6; {/* Ikona powiększenia */}
+          &#x26F6; 
         </button>
       )}
 
-      {/* Wykresy */}
       <LineChart
         labels={labels}
         positiveData={positive}
@@ -58,10 +54,9 @@ const UserPlot = () => {
       />
       <ColumnChart labels={plotData.labels} yData={plotData.single_game_results} />
 
-      {/* Przycisk zamknięcia trybu fullscreen */}
       {isFullscreen && (
         <button className="close-fullscreen-btn" onClick={toggleFullscreen}>
-          &#x2716; {/* Ikona zamknięcia */}
+          &#x2716; 
         </button>
       )}
     </div>

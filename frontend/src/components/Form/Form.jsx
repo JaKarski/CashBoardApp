@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify"; // Import toast for notifications
-import "react-toastify/dist/ReactToastify.css"; // Import default styles
-import api from "../../api"; // Replace with your actual API module
+import { toast } from "react-toastify"; 
+import "react-toastify/dist/ReactToastify.css";
+import api from "../../api"; 
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../../constants";
-import "./Form.css"; // Replace with your actual CSS file
+import "./Form.css";
 
 function Form({ route, method }) {
   const [username, setUsername] = useState("");

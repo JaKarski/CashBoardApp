@@ -12,7 +12,7 @@ class GameAdmin(admin.ModelAdmin):
 @admin.register(PlayerToGame)
 class PlayerGameAdmin(admin.ModelAdmin):
     list_display = ('id', 'player', 'game', 'join_time')
-    list_filter = ('game__code',)  # Używając podkreślenia do odwołania się do pola code w modelu game
+    list_filter = ('game__code',)
     
 
 @admin.register(Action)

@@ -9,14 +9,14 @@ export const splitDataAtZero = (labels, data) => {
     const currentValue = data[i];
     const prevValue = i > 0 ? data[i - 1] : null;
 
-    // Sprawdzamy, czy przekraczamy zero
+    // Check if we are crossing zero
     if (currentValue !== null && prevValue !== null && currentValue * prevValue < 0) {
       const zeroCrossing = (prevValue / (prevValue - currentValue)) * (labels[i].getTime() - labels[i - 1].getTime()) + labels[i - 1].getTime();
       splitLabels.push(new Date(zeroCrossing));
       positiveSegment.push(0);
       negativeSegment.push(0);
-      pointRadiusPositive.push(0); // Brak punktu na przecięciu
-      pointRadiusNegative.push(0); // Brak punktu na przecięciu
+      pointRadiusPositive.push(0); // No point at the intersection
+      pointRadiusNegative.push(0); // No point at the intersection
     }
 
     splitLabels.push(labels[i]);
@@ -24,18 +24,18 @@ export const splitDataAtZero = (labels, data) => {
     if (currentValue !== null && currentValue >= 0) {
       positiveSegment.push(currentValue);
       negativeSegment.push(null);
-      pointRadiusPositive.push(3); // Punkt dla dodatnich wartości
-      pointRadiusNegative.push(0); // Brak punktu dla ujemnych wartości
+      pointRadiusPositive.push(3); // Point for positive values
+      pointRadiusNegative.push(0); // No point for negative values
     } else if (currentValue !== null && currentValue < 0) {
       positiveSegment.push(null);
       negativeSegment.push(currentValue);
-      pointRadiusPositive.push(0); // Brak punktu dla dodatnich wartości
-      pointRadiusNegative.push(3); // Punkt dla ujemnych wartości
+      pointRadiusPositive.push(0); // No point for positive values
+      pointRadiusNegative.push(3); // Point for negative values
     } else {
       positiveSegment.push(null);
       negativeSegment.push(null);
-      pointRadiusPositive.push(0); // Brak punktu dla null
-      pointRadiusNegative.push(0); // Brak punktu dla null
+      pointRadiusPositive.push(0); // No point for null values
+      pointRadiusNegative.push(0); // No point for null values
     }
   }
 

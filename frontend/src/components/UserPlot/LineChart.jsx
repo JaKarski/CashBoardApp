@@ -13,11 +13,10 @@ import {
 import 'chartjs-adapter-date-fns';
 import './UserPlot.css';
 
-// Rejestracja skal i elementów Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  TimeScale, // Rejestracja TimeScale, która była przyczyną błędu
+  TimeScale,
   PointElement,
   LineElement,
   Tooltip,
@@ -33,7 +32,7 @@ const LineChart = ({ labels, positiveData, negativeData, pointRadiusPositive, po
         data: negativeData,
         fill: {
           target: 'origin',
-          below: 'rgba(255, 0, 0, 0.3)', // Wypełnienie dla ujemnych
+          below: 'rgba(255, 0, 0, 0.3)',
         },
         borderColor: 'red',
         pointBackgroundColor: 'red',
@@ -47,7 +46,7 @@ const LineChart = ({ labels, positiveData, negativeData, pointRadiusPositive, po
         data: positiveData,
         fill: {
           target: 'origin',
-          above: 'rgba(0, 255, 0, 0.3)', // Wypełnienie dla dodatnich
+          above: 'rgba(0, 255, 0, 0.3)',
         },
         borderColor: 'green',
         pointBackgroundColor: 'green',

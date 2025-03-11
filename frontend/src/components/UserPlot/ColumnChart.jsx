@@ -14,11 +14,10 @@ import {
 import 'chartjs-adapter-date-fns';
 import './UserPlot.css';
 
-// Rejestracja skal i elementów Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  TimeScale, // Rejestracja TimeScale, która była przyczyną błędu
+  TimeScale,
   PointElement,
   BarElement,
   LineElement,
@@ -44,10 +43,10 @@ const ColumnChart = ({ labels, yData }) => {
     responsive: true,
     plugins: {
       legend: {
-        display: false, // Usuwamy legendę
+        display: false,
       },
       title: {
-        display: false, // Usuwamy tytuł
+        display: false,
       },
     },
     scales: {
@@ -66,7 +65,7 @@ const ColumnChart = ({ labels, yData }) => {
         },
       },
       y: {
-        beginAtZero: true, // Oś Y zaczyna się od zera
+        beginAtZero: true,
         ticks: {
             display: false,
           color: 'white',

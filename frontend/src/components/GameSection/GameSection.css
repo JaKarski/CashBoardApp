@@ -19,10 +19,9 @@ h1 {
   margin-bottom: 20px;
 }
 
-/* Styl dla timera */
 .timer {
-  font-size: 4em; /* Zwiększ rozmiar tekstu dla timera */
-  font-weight: bold; /* Dodaj pogrubienie dla wyróżnienia */
-  color: #f5f5f5; /* Jaśniejszy kolor dla lepszej widoczności */
-  margin: 20px 0; /* Więcej miejsca wokół timera */
+  font-size: 4em; 
+  font-weight: bold;
+  color: #f5f5f5; 
+  margin: 20px 0; 
 }

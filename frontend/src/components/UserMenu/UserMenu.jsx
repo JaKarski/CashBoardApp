@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { toast } from "react-toastify"; // Import toast for notifications
-import "react-toastify/dist/ReactToastify.css"; // Import default styles
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from 'react-router-dom';
 import { FiUser } from 'react-icons/fi';
 import api from "../../api";
@@ -9,7 +9,7 @@ import './UserMenu.css';
 const UserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [roomCode, setRoomCode] = useState('');
-  const [isSuperUser, setIsSuperUser] = useState(false);  // stan, czy użytkownik jest superużytkownikiem
+  const [isSuperUser, setIsSuperUser] = useState(false);
   const navigate = useNavigate();
   const menuRef = useRef(null);
 
@@ -17,78 +17,45 @@ const UserMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleLogout = () => {
-    navigate('/logout');
-  };
-
-  const handleProfile = () => {
-    navigate('/wip');
-  };
-
-  const handleCreateGame = () => {
-    navigate('/createGame');
-  };
+  const handleLogout = () => navigate('/logout');
+  const handleProfile = () => navigate('/wip');
+  const handleCreateGame = () => navigate('/createGame');
 
   const handleJoinRoom = async () => {
     if (roomCode.trim() !== '') {
       try {
-        // Wysyłamy żądanie POST do API, aby dodać gracza do gry
         const response = await api.post('api/games/join/', { room_code: roomCode });
-  
-        // Sprawdzamy odpowiedź serwera
+
         if (response.status === 200) {
-          //alert("Included in the game!");
-          toast.success("Included in the game!", {
-            toastId: "included",
-          });
+          toast.success("Included in the game!", { toastId: "included" });
           navigate(`/game/${roomCode}`);
         }
       } catch (error) {
-        // Obsługa błędów
         if (error.response) {
-          // Jeśli użytkownik już jest w grze
           if (error.response.status === 400 && error.response.data.detail === "Already attached to this game.") {
-            //alert("Już dołączono do tej gry.");
-            toast.error("You have already join the game", {
-              toastId: "already_in_game",
-            });
-            // Przekierowanie do gry, jeśli użytkownik już w niej jest
+            toast.error("You have already joined the game", { toastId: "already_in_game" });
             navigate(`/game/${roomCode}`);
           } else {
-            //alert(error.response.data.detail || "Wystąpił problem podczas dołączania do gry.");
-            toast.error(error.response.data.detail || "There was a problem when joining the game.", {
-              toastId: "network_problem",
-            });
+            toast.error(error.response.data.detail || "There was a problem when joining the game.", { toastId: "network_problem" });
           }
         } else {
-          console.error("Błąd sieci:", error.message);
-          //alert("Wystąpił problem z siecią.");
-          toast.error("There was a problem with the network.", {
-            toastId: "network_problem",
-          });
+          toast.error("There was a network problem.", { toastId: "network_problem" });
         }
       }
     }
   };
 
-  // Funkcja do sprawdzenia, czy użytkownik jest superużytkownikiem
   useEffect(() => {
     const checkSuperUserStatus = async () => {
       try {
-        // Wysyłanie zapytania GET za pomocą Axios
         const response = await api.get('/api/check-superuser/');
-    
         if (response.data.is_superuser) {
           setIsSuperUser(true);
         }
-      } catch (error) {
-        if (error.response) {
-        }
-      }
+      } catch (error) {}
     };
-    
     checkSuperUserStatus();
-  }, []);  // Ten efekt uruchomi się raz, przy montowaniu komponentu
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -98,10 +65,8 @@ const UserMenu = () => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [menuRef]);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="user-menu-container" ref={menuRef}>
@@ -122,12 +87,9 @@ const UserMenu = () => {
               />
               <label className="form-label">Room code</label>
             </div>
-            <button className="join-room-button" onClick={handleJoinRoom}>
-              Join
-            </button>
+            <button className="join-room-button" onClick={handleJoinRoom}>Join</button>
           </div>
 
-          {/* Wyświetl przycisk Create Game tylko dla superużytkowników */}
           {isSuperUser && (
             <button className="dropdown-item" onClick={handleCreateGame}>Create game</button>
           )}

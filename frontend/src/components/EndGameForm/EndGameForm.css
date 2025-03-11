@@ -4,7 +4,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 1); /* Ciemne, półprzezroczyste tło */
+  background-color: rgba(0, 0, 0, 1);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,21 +13,21 @@
 
 .endgame-modal-content {
   width: 60%;
-  max-height: 90vh; /* Ograniczamy wysokość modala do 90% widocznej wysokości */
+  max-height: 90vh; 
   padding: 20px;
-  background-color: rgba(0, 0, 0, 0.4); /* Wyraziste czarne tło */
+  background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(5px);
   border-radius: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Zwiększony cień dla większej głębi */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); 
   text-align: center;
   color: white;
-  overflow-y: auto; /* Dodajemy przewijanie, gdy zawartość przekracza wysokość modala */
+  overflow-y: auto; 
 }
 
 .endgame-players-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Siatka z automatycznymi kolumnami */
-  gap: 20px; /* Odstępy między elementami siatki */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+  gap: 20px; 
   margin-bottom: 20px;
 }
 
@@ -41,7 +41,7 @@
 .endgame-player-text {
   font-size: 1.4em;
   margin: 10px 0;
-  color: #f5f5f5; /* Lekko jaśniejszy kolor tekstu */
+  color: #f5f5f5; 
 }
 
 .endgame-modal-buttons {
@@ -51,31 +51,31 @@
 }
 
 .endgame-button {
-  background-color: rgba(255, 255, 255, 0.2); /* Jasne tło z przezroczystością */
-  border: 2px solid rgba(255, 255, 255, 0.5); /* Delikatny obrys */
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   color: white;
   padding: 10px 20px;
   cursor: pointer;
   font-size: 1.1em;
-  border-radius: 12px; /* Zaokrąglone krawędzie */
+  border-radius: 12px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .endgame-button:hover {
-  background-color: rgba(255, 255, 255, 0.4); /* Zwiększona przezroczystość przy najechaniu */
-  box-shadow: 0 6px 12px 0 rgba(0, 0, 0, 0.4); /* Większy cień na hover */
+  background-color: rgba(255, 255, 255, 0.4); 
+  box-shadow: 0 6px 12px 0 rgba(0, 0, 0, 0.4); 
 }
 
-/* Styl dla zablokowanego przycisku */
+
 .endgame-button:disabled {
-  background-color: rgba(255, 255, 255, 0.1); /* Bardziej przezroczysty przycisk */
-  cursor: not-allowed; /* Ikona "nie dozwolone" */
-  box-shadow: none; /* Usuń cień */
-  color: rgba(255, 255, 255, 0.5); /* Zmniejszona widoczność tekstu */
+  background-color: rgba(255, 255, 255, 0.1); 
+  cursor: not-allowed; 
+  box-shadow: none; 
+  color: rgba(255, 255, 255, 0.5); 
 }
 
 .endgame-modal-header {
-  font-size: 2.2em; /* Większy nagłówek */
+  font-size: 2.2em; 
   margin-bottom: 15px;
 }
 
@@ -83,45 +83,45 @@
   padding: 10px;
   width: 100px;
   text-align: center;
-  background-color: rgba(0, 0, 0, 0.2); /* Ciemne pole tekstowe z przezroczystością */
-  border: 2px solid rgba(255, 255, 255, 0.5); /* Obrys podobny do przycisków */
+  background-color: rgba(0, 0, 0, 0.2); 
+  border: 2px solid rgba(255, 255, 255, 0.5);
   color: white;
   font-size: 1.2em;
   border-radius: 8px;
 }
 
 .endgame-player-input::placeholder {
-  color: rgba(255, 255, 255, 0.7); /* Lekkie rozjaśnienie placeholdera */
+  color: rgba(255, 255, 255, 0.7); 
 }
 
-/* Dodajemy styl responsywny na telefony */
+
 @media (max-width: 768px) {
   .endgame-modal-content {
-      width: 90%; /* Zmniejszamy szerokość modala na mniejszych ekranach */
-      max-height: 90vh; /* Ograniczamy maksymalną wysokość modala */
+      width: 90%; 
+      max-height: 90vh; 
       padding: 10px;
   }
 
   .endgame-modal-header {
-      font-size: 1.8em; /* Zmniejszamy wielkość nagłówka */
+      font-size: 1.8em; 
   }
 
   .endgame-players-container {
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Zmniejszamy minimalną szerokość kolumn */
-      gap: 10px; /* Mniejsze odstępy między elementami */
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+      gap: 10px; 
   }
 
   .endgame-player-text {
-      font-size: 1.2em; /* Zmniejszamy wielkość tekstu graczy */
+      font-size: 1.2em;
   }
 
   .endgame-button {
-      padding: 8px 15px; /* Zmniejszamy padding w przyciskach */
-      font-size: 1em; /* Zmniejszamy wielkość czcionki w przyciskach */
+      padding: 8px 15px;
+      font-size: 1em;
   }
 
   .endgame-player-input {
-      width: 80px; /* Zmniejszamy szerokość pola input */
-      font-size: 1em; /* Zmniejszamy wielkość czcionki w polach input */
+      width: 80px; 
+      font-size: 1em; 
   }
 }

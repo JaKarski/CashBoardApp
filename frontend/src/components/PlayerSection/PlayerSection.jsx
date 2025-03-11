@@ -1,60 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../../api';  // Używamy skonfigurowanej instancji Axios
+import api from '../../api';
 import './PlayerSection.css';
 
 const PlayersSection = () => {
-  const { code } = useParams();  // Pobieramy dynamiczny parametr 'code' z URL (gameCode)
+  const { code } = useParams();
   const [players, setPlayers] = useState([]);
   const [buyIn, setBuyIn] = useState(0);
   const [isSuperUser, setIsSuperUser] = useState(false);
 
-  // Funkcja do pobrania graczy i buy_in z serwera
+  // Fetch players and buy-in from the server
   const fetchGameData = async () => {
     try {
       const gameResponse = await api.get(`api/games/${code}/players/`);
       setPlayers(gameResponse.data.players);
       setBuyIn(gameResponse.data.buy_in);
 
-      // Pobierz status superużytkownika
+      // Check if the user is a superuser
       const superuserResponse = await api.get('/api/check-superuser/');
       setIsSuperUser(superuserResponse.data.is_superuser);
     } catch (error) {
-      console.error('Błąd podczas pobierania danych:', error);
+      console.error('Error fetching game data:', error);
     }
   };
 
   useEffect(() => {
     fetchGameData();
-    const interval = setInterval(() => {
-      fetchGameData();
-    }, 1000);
+    const interval = setInterval(fetchGameData, 1000);
     return () => clearInterval(interval);
   }, [code]);
 
-  // Obsługa "Rebuy"
+  // Handle "Rebuy"
   const handleRebuy = async (username) => {
     try {
       await api.post(`api/games/${code}/action/`, {
         action: 'rebuy',
-        username: username  // Przekazujemy nick gracza
+        username
       });
-      fetchGameData();  // Aktualizujemy dane po sukcesie
+      fetchGameData();
     } catch (error) {
-      console.error('Błąd podczas rebuya:', error);
+      console.error('Error processing rebuy:', error);
     }
   };
 
-  // Obsługa "Back"
+  // Handle "Back"
   const handleBack = async (username) => {
     try {
       await api.post(`api/games/${code}/action/`, {
         action: 'back',
-        username: username  // Przekazujemy nick gracza
+        username
       });
-      fetchGameData();  // Aktualizujemy dane po sukcesie
+      fetchGameData();
     } catch (error) {
-      console.error('Błąd podczas cofania rebuya:', error);
+      console.error('Error processing back action:', error);
     }
   };
 
@@ -72,12 +70,12 @@ const PlayersSection = () => {
               <button className="rebuy-button" onClick={() => handleRebuy(player.name)}>Rebuy</button>
               {isSuperUser && (
                 <button 
-                className="back-button" 
-                onClick={() => handleBack(player.name)} 
-                disabled={parseInt(player.stack) === 0}  // Wyłącz przycisk, jeśli stack gracza wynosi 0
-              >
-                Back
-              </button>
+                  className="back-button" 
+                  onClick={() => handleBack(player.name)} 
+                  disabled={parseInt(player.stack) === 0}  
+                >
+                  Back
+                </button>
               )}
             </div>
           </div>

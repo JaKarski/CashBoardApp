@@ -99,7 +99,6 @@ describe("EndGameModal Component", () => {
         });
     });
     it("should enable and disable the Confirm button based on remaining money on the table", async () => {
-        // Symulacja odpowiedzi API na pobranie graczy
         api.get.mockResolvedValueOnce({
             data: {
                 players: [
@@ -111,29 +110,23 @@ describe("EndGameModal Component", () => {
     
         renderWithRouter();
     
-        // Oczekiwanie na załadowanie graczy
         await waitFor(() => {
             expect(screen.getByText("Money on table: 3000 PLN")).toBeInTheDocument();
         });
     
-        // Sprawdzenie, czy przycisk Confirm jest zablokowany
         const confirmButton = screen.getByRole("button", { name: /confirm/i });
         expect(confirmButton).toBeDisabled();
-    
-        // Symulacja zmiany wartości cash_out, które powodują, że pieniądze na stole nie wynoszą 0
+
         fireEvent.change(screen.getAllByRole("spinbutton")[0], { target: { value: "500" } });
         fireEvent.change(screen.getAllByRole("spinbutton")[1], { target: { value: "2000" } });
-    
-        // Sprawdzenie, czy przycisk Confirm nadal jest zablokowany
+
         await waitFor(() => {
             expect(confirmButton).toBeDisabled();
         });
-    
-        // Symulacja ustawienia wartości cash_out tak, aby pieniądze na stole wynosiły 0
+
         fireEvent.change(screen.getAllByRole("spinbutton")[0], { target: { value: "1000" } });
         fireEvent.change(screen.getAllByRole("spinbutton")[1], { target: { value: "2000" } });
-    
-        // Sprawdzenie, czy przycisk Confirm został odblokowany
+
         await waitFor(() => {
             expect(confirmButton).toBeEnabled();
         });

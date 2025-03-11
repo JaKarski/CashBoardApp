@@ -34,7 +34,7 @@ vi.mock("../../api", () => {
 // Mock jwtDecode
 vi.mock("jwt-decode", () => ({
     jwtDecode: () => {
-        return { exp: Date.now() / 1000 + 1000 }; // Token ważny w przyszłości
+        return { exp: Date.now() / 1000 + 1000 };
     },
 }));
 

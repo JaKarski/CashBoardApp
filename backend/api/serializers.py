@@ -7,7 +7,14 @@ from django.db.models.functions import Coalesce
 
 
 class UserSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(write_only=True, required=True)  # Now it's required
+    """Serializer for user registration and profile creation.
+    
+    - Requires `phone_number` as an additional field.
+    - Ensures unique email and username validation.
+    - Uses Django's built-in password validation.
+    """
+
+    phone_number = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
@@ -21,39 +28,31 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, value):
-        """
-        Check if the email is unique.
-        """
+        """Ensures email uniqueness."""
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("This email is already in use.")
         return value
 
     def validate_username(self, value):
-        """
-        Check if the username is unique.
-        """
+        """Ensures username uniqueness."""
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("This username is already taken.")
         return value
 
     def validate_password(self, value):
-        """
-        Check the strength of the password.
-        """
+        """Validates password strength using Django's built-in password validators."""
         try:
-            validate_password(value)  # Use Django's built-in password validation
+            validate_password(value)
         except Exception as e:
-            raise serializers.ValidationError(" ".join(e.messages))  # Return all validation error messages
+            raise serializers.ValidationError(" ".join(e.messages))
         return value
 
     def create(self, validated_data):
-        """
-        Create a new user and their profile (if phone_number is provided).
-        """
+        """Creates a new user and their profile (phone number required)."""
         phone_number = validated_data.pop('phone_number')
         password = validated_data.pop('password')
         user = User.objects.create_user(**validated_data)
-        user.set_password(password)  # Securely set the user's password
+        user.set_password(password)
         user.save()
 
         # Create a user profile
@@ -63,9 +62,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GameSerializer(serializers.ModelSerializer):
-    creator = UserSerializer(read_only=True)  # Display creator details but make it read-only
-    code = serializers.CharField(read_only=True)  # Game code is auto-generated and cannot be manually set
-    start_time = serializers.DateTimeField(read_only=True)  # Automatically set when the game is created
+    """Serializer for handling game creation and retrieval.
+    
+    - `creator`: Read-only user details.
+    - `code`: Auto-generated, cannot be manually set.
+    - `start_time`: Automatically assigned upon creation.
+    """
+
+    creator = UserSerializer(read_only=True)
+    code = serializers.CharField(read_only=True)
+    start_time = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Game
@@ -77,15 +83,21 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class PlayerToGameSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='player.username', read_only=True)  # Dodajemy pole name
-    stack = serializers.SerializerMethodField()  # Pole stack obliczane dynamicznie
+    """Serializer for retrieving player data within a game.
+    
+    - `name`: The username of the player.
+    - `stack`: The total buy-in stack dynamically calculated.
+    """
+
+    name = serializers.CharField(source='player.username', read_only=True)
+    stack = serializers.SerializerMethodField()
 
     class Meta:
         model = PlayerToGame
-        fields = ['name', 'stack']  # Wybieramy tylko potrzebne pola
+        fields = ['name', 'stack']
 
     def get_stack(self, obj):
-        # Obliczamy stack dla danego PlayerToGame
+        """Calculates the total stack value based on actions within the game."""
         actions = Action.objects.filter(player_to_game=obj)
         return actions.aggregate(
             total_stack=Coalesce(Sum(F('multiplier') * F('player_to_game__game__buy_in')), 0)
@@ -93,11 +105,15 @@ class PlayerToGameSerializer(serializers.ModelSerializer):
 
 
 class PlayerActionSerializer(serializers.Serializer):
+    """Serializer for handling player actions such as 'rebuy' and 'back'."""
+    
     action = serializers.ChoiceField(choices=['rebuy', 'back'])
     username = serializers.CharField(max_length=150)
 
 
 class GameDataSerializer(serializers.Serializer):
+    """Serializer for retrieving essential game data and statistics."""
+    
     blinds = serializers.CharField()
     game_start_time = serializers.DateTimeField()
     money_on_table = serializers.FloatField()
@@ -106,7 +122,10 @@ class GameDataSerializer(serializers.Serializer):
 
 
 class GameAdditionalDataSerializer(serializers.ModelSerializer):
+    """Serializer for retrieving additional game settings and parameters."""
+    
     blind = serializers.FloatField()
+
     class Meta:
         model = Game
         fields = [
@@ -120,12 +139,19 @@ class GameAdditionalDataSerializer(serializers.ModelSerializer):
 
 
 class PlayerDataSerializer(serializers.Serializer):
+    """Serializer for handling player data including buy-in and cash-out amounts."""
+    
     player = serializers.CharField()
     buy_in = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
     cash_out = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=0)
 
 
 class UserStatsSerializer(serializers.Serializer):
+    """Serializer for user statistics and performance analysis.
+    
+    - Provides key performance indicators such as earnings, win rate, and hourly rate.
+    """
+
     earn = serializers.DecimalField(max_digits=10, decimal_places=2)
     games_played = serializers.IntegerField()
     total_play_time = serializers.DecimalField(max_digits=10, decimal_places=2)

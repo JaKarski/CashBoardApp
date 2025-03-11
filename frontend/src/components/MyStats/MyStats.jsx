@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDollarSign, faClock, faTrophy, faChartLine, faCoins, faPlayCircle, faWallet } from '@fortawesome/free-solid-svg-icons';
 
 import "./MyStats.css";
-import api from '../../api';  // Zakładam, że masz gotowy moduł API do komunikacji z backendem
+import api from '../../api';
 
 const MyStats = () => {
   const [stats, setStats] = useState({
@@ -20,17 +20,17 @@ const MyStats = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('/api/user/stats/');  // Zmienna ścieżka, upewnij się, że się zgadza z backendem
-        setStats(response.data);  // Ustawianie danych statystyk
+        const response = await api.get('/api/user/stats/');
+        setStats(response.data);
       } catch (error) {
-        console.error("Błąd podczas pobierania danych statystyk:", error);
+        console.error("Error fetching statistics:", error);
       }
     };
 
     fetchStats();
   }, []);
 
-  // Funkcja do mapowania etykiet na odpowiednie ikony
+  // Map labels to corresponding icons
   const getIconForLabel = (label) => {
     switch (label) {
       case 'Earn':
@@ -48,11 +48,11 @@ const MyStats = () => {
       case 'Win Rate':
         return faChartLine;
       case 'Total Buy-in':
-        return faWallet;  // Ikona portfela dla Total Buy-in
+        return faWallet;
       default:
-        return null; // Jeśli brak pasującej ikony
+        return null;
     }
-};
+  };
 
   const statsData = [
     { label: 'Earn', value: `PLN ${stats.earn}` },

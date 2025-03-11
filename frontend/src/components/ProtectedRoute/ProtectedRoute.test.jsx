@@ -30,7 +30,7 @@ vi.mock("../../api", () => ({
 // Mock jwtDecode
 vi.mock("jwt-decode", () => ({
     jwtDecode: () => {
-        return { exp: Date.now() / 1000 + 1000 }; // Token ważny w przyszłości
+        return { exp: Date.now() / 1000 + 1000 };
     },
 }));
 
@@ -44,13 +44,11 @@ describe("ProtectedRoute", () => {
             </MemoryRouter>
         );
 
-        // Czekaj na pojawienie się zawartości
         const content = await screen.findByText("Protected Content");
         expect(content).toBeInTheDocument();
     });
 
     it("redirects to /register when user is unauthorized", async () => {
-        // Ustaw mock localStorage na brak tokenu
         Storage.prototype.getItem.mockImplementation(() => null);
 
         render(
@@ -61,14 +59,12 @@ describe("ProtectedRoute", () => {
             </MemoryRouter>
         );
 
-        // Sprawdź, że zawartość nie istnieje i następuje przekierowanie
         await waitFor(() => {
             expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
         });
     });
 
     it("renders children when token has expired but refresh token is valid", async () => {
-        // Mockowanie wygasłego tokenu
         Storage.prototype.getItem.mockImplementation((key) => {
             if (key === ACCESS_TOKEN) return "expired_access_token";
             if (key === REFRESH_TOKEN) return "refresh_token";
@@ -77,7 +73,7 @@ describe("ProtectedRoute", () => {
 
         vi.mock("jwt-decode", () => ({
             jwtDecode: () => {
-                return { exp: Date.now() / 1000 - 1000 }; // Token wygasł w przeszłości
+                return { exp: Date.now() / 1000 - 1000 };
             },
         }));
 
@@ -89,12 +85,10 @@ describe("ProtectedRoute", () => {
             </MemoryRouter>
         );
 
-        // Czekaj na pojawienie się zawartości
         const content = await screen.findByText("Protected Content");
         expect(content).toBeInTheDocument();
     });
     it("renders children when token is valid", async () => {
-        // Mockowanie ważnego tokenu
         Storage.prototype.getItem.mockImplementation((key) => {
             if (key === ACCESS_TOKEN) return "valid_access_token";
             if (key === REFRESH_TOKEN) return "refresh_token";
@@ -103,7 +97,7 @@ describe("ProtectedRoute", () => {
 
         vi.mock("jwt-decode", () => ({
             jwtDecode: () => {
-                return { exp: Date.now() / 1000 + 1000 }; // Token ważny w przyszłości
+                return { exp: Date.now() / 1000 + 1000 };
             },
         }));
 
@@ -115,7 +109,6 @@ describe("ProtectedRoute", () => {
             </MemoryRouter>
         );
 
-        // Czekaj na pojawienie się zawartości
         const content = await screen.findByText("Protected Content");
         expect(content).toBeInTheDocument();
     });

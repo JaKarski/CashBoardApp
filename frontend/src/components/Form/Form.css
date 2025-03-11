@@ -30,18 +30,18 @@ h1 {
     position: relative;
     z-index: 1;
     font-size: 16px;
-    color: white; /* Kolor wpisywanego tekstu na biały */
+    color: white; 
 }
 
 .form-input::placeholder {
-    color: transparent; /* Ukryj placeholder, jeśli nie potrzebny */
+    color: transparent; 
 }
 
 .form-label {
     position: absolute;
     top: 50%;
     left: 12px;
-    color: #666; /* Lekko ciemniejszy kolor dla tekstu etykiety */
+    color: #666; 
     font-size: 16px;
     pointer-events: none;
     transform: translateY(-50%);
@@ -54,7 +54,7 @@ h1 {
     top: -10px;
     left: 10px;
     font-size: 12px;
-    color: #999; /* Ciemniejszy kolor gdy etykieta idzie do góry */
+    color: #999;
 }
 
 .form-button {
@@ -73,11 +73,10 @@ h1 {
     background-color: #0056b3;
 }
 
-/* Styl dla tekstu przełączającego między logowaniem a rejestracją */
 .switch-form {
     margin-top: 10px;
     font-size: 14px;
-    color: white; /* Kolor białego tekstu dla ciemnego tła */
+    color: white; 
 }
 
 .switch-link {

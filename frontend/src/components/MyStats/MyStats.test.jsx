@@ -3,7 +3,6 @@ import { vi } from "vitest";
 import MyStats from "./MyStats";
 import api from "../../api";
 
-// Mockowanie modułu API
 vi.mock("../../api", () => ({
   default: {
     get: vi.fn((url) => {
@@ -48,16 +47,13 @@ describe("MyStats Component Tests", () => {
   });
 
   it("handles API errors gracefully", async () => {
-    // Wycisz console.error, aby nie zaśmiecał logów
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    // Symulacja błędu API
     api.get.mockRejectedValueOnce(new Error("Network Error"));
 
     render(<MyStats />);
 
     await waitFor(() => {
-      // Sprawdź, że statystyki nie zostały załadowane
       expect(screen.queryByText("PLN 1200.5")).not.toBeInTheDocument();
       expect(screen.queryByText("35")).not.toBeInTheDocument();
     });
@@ -70,8 +66,8 @@ describe("MyStats Component Tests", () => {
     render(<MyStats />);
   
     await waitFor(() => {
-      const svgs = screen.getAllByRole("img", { hidden: true }); // Szukaj ukrytych elementów SVG
-      expect(svgs.length).toBe(8); // Liczba ikon odpowiada liczbie statystyk
+      const svgs = screen.getAllByRole("img", { hidden: true }); 
+      expect(svgs.length).toBe(8);
     });
   });
 });

@@ -1,1 +1,1 @@
-import '@testing-library/jest-dom'; // Włącza dodatkowe matchery, np. `toBeInTheDocument`
+import '@testing-library/jest-dom';

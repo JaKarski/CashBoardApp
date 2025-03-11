@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import "./DebtSettlement.css";
-import api from '../../api'; // Assuming you have a module for API communication
-import { toast } from "react-toastify"; // Import toast for notifications
-import "react-toastify/dist/ReactToastify.css"; // Import default styles
-
+import api from '../../api';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const DebtSettlement = () => {
   const [debtData, setDebtData] = useState([]);
 
-  // Function to fetch debt data from the backend
+  // Fetch debt data from the backend
   const fetchDebts = async () => {
     try {
-      const response = await api.get('/api/debts/'); // API call to fetch debt data
-      setDebtData(response.data); // Setting fetched data into state
+      const response = await api.get('/api/debts/');
+      setDebtData(response.data);
     } catch (error) {
       toast.error("Error while fetching debts. Please try again.", {
         toastId: "fetch_debts_error",
@@ -20,19 +19,18 @@ const DebtSettlement = () => {
     }
   };
 
-  // Fetch debts when the component is mounted
   useEffect(() => {
     fetchDebts();
   }, []);
 
-  // Function to send money for a debt
+  // Send money for a debt
   const handleSend = async (debtId) => {
     try {
-      await api.post(`/api/debts/send/${debtId}/`); // API call to send money
+      await api.post(`/api/debts/send/${debtId}/`);
       toast.success("Debt sent successfully!", {
         toastId: "send_success",
       });
-      fetchDebts(); // Refresh data after update
+      fetchDebts();
     } catch (error) {
       toast.error("Error while sending debt. Please try again.", {
         toastId: "send_error",
@@ -40,14 +38,14 @@ const DebtSettlement = () => {
     }
   };
 
-  // Function to accept money for a debt
+  // Accept money for a debt
   const handleAccept = async (debtId) => {
     try {
-      await api.post(`/api/debts/accept/${debtId}/`); // API call to accept debt
+      await api.post(`/api/debts/accept/${debtId}/`);
       toast.success("Debt accepted successfully!", {
         toastId: "accept_success",
       });
-      fetchDebts(); // Refresh data after update
+      fetchDebts();
     } catch (error) {
       toast.error("Error while accepting debt. Please try again.", {
         toastId: "accept_error",
@@ -59,7 +57,6 @@ const DebtSettlement = () => {
     <div className="debt-section">
       <h2>Debt Settlement</h2>
       <div className="debt-grid">
-        {/* Loop through debt data to display each debt item */}
         {debtData.map((debt, index) => (
           <div className="debt-item" key={index}>
             <h3 className="debt-title">

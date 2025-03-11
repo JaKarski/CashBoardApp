@@ -34,7 +34,7 @@ function App() {
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        theme="dark" // Możesz ustawić "dark" lub "colored"
+        theme="dark"
       />
       <Routes>
         <Route
@@ -75,7 +75,8 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
-        {/*<Route path="/register" element={<RegisterAndLogout />} />*/}
+        {/* Uncomment the line below to enable access to the registration form if registration functionality is required */}
+        {/*<Route path="/register" element={<RegisterAndLogout />} />*/} 
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

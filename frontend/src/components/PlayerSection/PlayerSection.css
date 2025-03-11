@@ -35,21 +35,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%; /* Pełna szerokość kontenera */
-  margin-right: 20px; /* Dodaje przestrzeń przed przyciskami */
+  width: 100%;
+  margin-right: 20px;
 }
 
 .player-name {
   font-size: 1.2em;
   font-weight: bold;
-  flex: 1; /* Zajmuje dostępne miejsce */
-  text-align: left; /* Wyrównanie nazwy do lewej */
+  flex: 1; 
+  text-align: left;
 }
 
 .player-stack {
   font-size: 1.2em;
-  min-width: 80px; /* Stała szerokość dla stacku */
-  text-align: center; /* Wyśrodkowanie stacku */
+  min-width: 80px; 
+  text-align: center;
 }
 
 .buttons-container {

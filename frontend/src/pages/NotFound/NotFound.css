@@ -1,4 +1,3 @@
-/* Reset marginesów i paddingów dla całego dokumentu */
 * {
     margin: 0;
     padding: 0;
@@ -20,7 +19,6 @@ body {
     margin: 0;
 }
 
-/* Kontener na całą wysokość i szerokość ekranu */
 .not-found-container {
     display: flex;
     flex-direction: column;
@@ -33,7 +31,6 @@ body {
     text-align: center;
 }
 
-/* Stos kart */
 .card-stack {
     display: flex;
     justify-content: center;
@@ -72,7 +69,6 @@ body {
     transform: rotate(10deg);
 }
 
-/* Tekst błędu */
 .error-title {
     font-size: 3em;
     margin-bottom: 10px;
@@ -83,7 +79,6 @@ body {
     margin-bottom: 20px;
 }
 
-/* Przycisk powrotu */
 .back-home {
     background-color: #4CAF50;
     color: white;

@@ -62,7 +62,7 @@ const Game = () => {
   }, [isInGame, isGameEnded, loading, navigate]);
 
   if (loading) {
-    return <div>Loading...</div>; // Show a loading message until the status is checked
+    return <div>Loading...</div>;
   }
 
   return (

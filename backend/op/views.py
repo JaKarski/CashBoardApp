@@ -11,11 +11,10 @@ def home(request):
     episodes = Episode.objects.all()
     total_episodes = episodes.count()
     watched_episodes = UserEpisode.objects.filter(user=request.user, watched=True)
-    
+
     watched_count = watched_episodes.count()
     remaining_count = total_episodes - watched_count
 
-    # Obsługa przypadku, gdy użytkownik nie obejrzał jeszcze żadnego odcinka
     if watched_count == 0:
         first_watched = "N/A"
         last_watched = "N/A"
@@ -29,12 +28,11 @@ def home(request):
     else:
         first_watched = watched_episodes.order_by('watched_date').first().watched_date
         last_watched = now().date()
-        days_watching = max((last_watched - first_watched).days + 1, 1)  # Zapobiegamy dzieleniu przez 0
+        days_watching = max((last_watched - first_watched).days + 1, 1)
 
         avg_episodes_per_day = watched_count / days_watching
-        avg_minutes_per_day = avg_episodes_per_day * 20  # 20 minut na odcinek
+        avg_minutes_per_day = avg_episodes_per_day * 20  # Assuming 20 minutes per episode
 
-        # Obsługa przypadku, gdy użytkownik obejrzał już wszystkie odcinki
         if remaining_count == 0:
             estimated_end_date = "Completed 🎉"
             required_episodes_per_day = "N/A"
@@ -46,7 +44,7 @@ def home(request):
             days_until_target = (target_date - last_watched).days
             required_episodes_per_day = remaining_count / days_until_target if days_until_target > 0 else "N/A"
 
-        # Najdłuższy maraton (dzień, w którym obejrzałem najwięcej odcinków)
+        # Find the longest marathon day (day with the most episodes watched)
         daily_watched = defaultdict(int)
         for ue in watched_episodes:
             if ue.watched_date:
@@ -57,7 +55,7 @@ def home(request):
         else:
             max_marathon_day, max_marathon_count = "N/A", 0
 
-    # Miesięczna statystyka obejrzanych odcinków
+    # Monthly watch statistics
     monthly_data = defaultdict(int)
     for ue in watched_episodes:
         if ue.watched_date:
@@ -93,18 +91,17 @@ def mark_as_watched(request, episode_id):
         user_episode, created = UserEpisode.objects.get_or_create(user=request.user, episode=episode)
 
         if user_episode.watched:
-            # Jeśli odcinek już jest oznaczony jako obejrzany -> oznacz jako NIEobejrzany
+            # If already watched, mark as unwatched
             user_episode.watched = False
             user_episode.save()
             return JsonResponse({'status': 'unwatched', 'episode_id': episode_id})
-
         else:
-            # Jeśli nie było obejrzane -> oznacz jako obejrzane i ustaw aktualną datę
+            # If not watched, mark as watched and set the current date
             user_episode.watched = True
             user_episode.watched_date = now().date()
             user_episode.save()
 
-            # **Propagacja wsteczna**: Oznacz wcześniejsze odcinki jako obejrzane
+            # Backward propagation: mark previous episodes as watched
             previous_episodes = Episode.objects.filter(number__lt=episode.number).order_by('-number')
             for prev_episode in previous_episodes:
                 prev_user_episode, _ = UserEpisode.objects.get_or_create(user=request.user, episode=prev_episode)
@@ -114,4 +111,5 @@ def mark_as_watched(request, episode_id):
                     prev_user_episode.save()
 
             return JsonResponse({'status': 'watched', 'episode_id': episode_id})
+
     return JsonResponse({'status': 'error'}, status=400)

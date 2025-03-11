@@ -1,23 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Wczytaj zmienne środowiskowe
+// Load environment variables
 import dotenv from 'dotenv';
 dotenv.config();
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: process.env.VITE_HOST || 'localhost', // Domyślnie localhost, ale można zmienić na 0.0.0.0 w Dockerze
+    host: process.env.VITE_HOST || 'localhost',
     port: parseInt(process.env.VITE_PORT, 10) || 3000,
     strictPort: true,
   },
   test: {
-    globals: true, // Włącza globalne funkcje testów, np. `describe`, `it`
-    environment: 'jsdom', // Symuluje środowisko przeglądarki
-    setupFiles: './src/setupTests.js', // Plik konfiguracyjny do testów (opcjonalny)
+    globals: true, // Enables global testing functions, e.g., `describe`, `it`
+    environment: 'jsdom', // Simulates a browser environment
+    setupFiles: './src/setupTests.js', // Configuration file for tests (optional)
     coverage: {
-      reporter: ['text', 'html'], // Generowanie raportu pokrycia testami
+      reporter: ['text', 'html'], // Generates coverage reports
     },
   },
 });

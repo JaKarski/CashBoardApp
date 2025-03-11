@@ -91,13 +91,11 @@ describe("AdditionalInfoSection Component Tests", () => {
     });
   });
   it("displays modal when 'End Game' button is clicked", async () => {
-    // Mock danych graczy
     const playersMock = [
         { name: "Player1", stack: 1000, payout: 0 },
         { name: "Player2", stack: 2000, payout: 0 },
     ];
 
-    // Mock API response dla graczy
     vi.mocked(api.get).mockImplementation((url) => {
         if (url.includes("/api/games/")) {
             return Promise.resolve({
@@ -125,29 +123,24 @@ describe("AdditionalInfoSection Component Tests", () => {
         </MemoryRouter>
     );
 
-    // Oczekiwanie na załadowanie komponentu i przycisku "End Game"
     await waitFor(() => {
         expect(screen.getByText("End Game")).toBeInTheDocument();
     });
 
-    // Kliknięcie przycisku "End Game"
     fireEvent.click(screen.getByText("End Game"));
 
-    // Sprawdzenie, czy modal został wyświetlony
     await waitFor(() => {
-        const modal = screen.getByRole("dialog"); // Teraz modal powinien mieć atrybut role="dialog"
+        const modal = screen.getByRole("dialog"); 
         expect(modal).toBeVisible();
         expect(modal).toHaveTextContent("Money on table:");
     });
   });
   it("hides modal when 'Cancel' button is clicked", async () => {
-    // Mock danych graczy
     const playersMock = [
         { name: "Player1", stack: 1000, payout: 0 },
         { name: "Player2", stack: 2000, payout: 0 },
     ];
 
-    // Mock API response dla graczy
     vi.mocked(api.get).mockImplementation((url) => {
         if (url.includes("/api/games/")) {
             return Promise.resolve({
@@ -175,25 +168,20 @@ describe("AdditionalInfoSection Component Tests", () => {
         </MemoryRouter>
     );
 
-    // Oczekiwanie na załadowanie komponentu i przycisku "End Game"
     await waitFor(() => {
         expect(screen.getByText("End Game")).toBeInTheDocument();
     });
 
-    // Kliknięcie przycisku "End Game"
     fireEvent.click(screen.getByText("End Game"));
 
-    // Sprawdzenie, czy modal został wyświetlony
     await waitFor(() => {
         const modal = screen.getByRole("dialog");
         expect(modal).toBeVisible();
     });
 
-    // Kliknięcie przycisku "Cancel" w modalu
     const cancelButton = screen.getByText("Cancel");
     fireEvent.click(cancelButton);
 
-    // Sprawdzenie, czy modal zniknął
     await waitFor(() => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });

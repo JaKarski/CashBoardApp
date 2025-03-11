@@ -1,16 +1,16 @@
 FROM python:3.12-slim
 
-# Ustawiamy katalog roboczy
+# Set working directory
 WORKDIR /app
 
-# Kopiujemy wymagane pliki
+# Copy required files
 COPY requirements.txt .
 
-# Instalujemy zależności
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Kopiujemy kod źródłowy
+# Copy source code
 COPY . .
 
-# Ustawiamy polecenie startowe (Gunicorn)
+# Set the startup command (Gunicorn)
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application", "--workers", "3"]
