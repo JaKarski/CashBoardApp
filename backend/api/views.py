@@ -167,6 +167,51 @@ class PlayerActionView(APIView):
             last_action.delete()
             return Response({"detail": f"The last rebuy was undone for {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
         return Response({"detail": f"Player {player_to_game.player.username} has no actions to undo."}, status=status.HTTP_400_BAD_REQUEST)
+    
+class CheckPlayerInGameView(APIView):
+    """API View to check if a player is part of a game and whether the game is still active.
+    
+    - If the game does not exist, returns a `404 Not Found` response.
+    - If the game has ended, returns a `410 Gone` response.
+    - Otherwise, checks if the authenticated user is part of the game and returns the result.
+    """
+
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access this endpoint.
+
+    def get(self, request, game_code):
+        """Handles GET requests to check the player's participation in a game.
+        
+        Returns:
+        - `is_in_game`: `True` if the user is in the game, otherwise `False`.
+        - `is_game_ended`: `True` if the game has ended, otherwise `False`.
+        - `game_code`: The unique identifier for the game.
+        """
+
+        try:
+            game = Game.objects.get(code=game_code)
+        except Game.DoesNotExist:
+            raise NotFound("Game not found.")
+
+        if game.is_end:
+            return Response(
+                {
+                    'is_in_game': False,  
+                    'is_game_ended': True, 
+                    'game_code': game_code,
+                },
+                status=status.HTTP_410_GONE 
+            )
+
+        is_in_game = PlayerToGame.objects.filter(player=request.user, game=game).exists()
+
+        return Response(
+            {
+                'is_in_game': is_in_game,  
+                'is_game_ended': False, 
+                'game_code': game_code,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class GameDataView(APIView):
