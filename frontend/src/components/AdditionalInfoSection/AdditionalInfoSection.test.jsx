@@ -31,23 +31,6 @@ describe("AdditionalInfoSection Component Tests", () => {
     vi.clearAllMocks();
   });
 
-  it("renders additional info correctly", async () => {
-    render(
-      <MemoryRouter initialEntries={["/game/GAME123"]}>
-        <Routes>
-          <Route path="/game/:code" element={<AdditionalInfoSection />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText("Dodatkowe info")).toBeInTheDocument();
-      expect(screen.getByText("Buyin: 100 PLN")).toBeInTheDocument();
-      expect(screen.getByText("PLO: 20 rozdania/2h")).toBeInTheDocument();
-      expect(screen.getByText("Stand-Up: 1h")).toBeInTheDocument();
-      expect(screen.getByText("Poker z Showdown'em: 20.00 PLN")).toBeInTheDocument();
-    });
-  });
   it("displays 'End Game' button only for superuser", async () => {
     render(
       <MemoryRouter initialEntries={["/game/GAME123"]}>

@@ -134,6 +134,7 @@ class PlayerListView(generics.ListAPIView):
 
 class PlayerActionView(APIView):
     """Handles player actions such as 'rebuy' and 'back' within a game."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request, game_code, *args, **kwargs):
@@ -141,27 +142,41 @@ class PlayerActionView(APIView):
         serializer.is_valid(raise_exception=True)
         action_type = serializer.validated_data['action']
         player_username = serializer.validated_data['username']
+        user = request.user
 
+        # Manual validation of action type
         if action_type not in ['rebuy', 'back']:
             return Response({"detail": "Unknown action type."}, status=status.HTTP_400_BAD_REQUEST)
 
-        game = get_object_or_404(Game, code=game_code)
-        player_to_game = get_object_or_404(PlayerToGame, player__username=player_username, game=game)
+        # Find the game
+        try:
+            game = Game.objects.get(code=game_code)
+        except Game.DoesNotExist:
+            raise NotFound("Game not found.")
 
+        # Find the player in the game
+        try:
+            player_to_game = PlayerToGame.objects.select_related('player', 'game').get(
+                player__username=player_username, game=game
+            )
+        except PlayerToGame.DoesNotExist:
+            raise NotFound(f"Player '{player_username}' is not associated with this game.")
+
+        # Handle rebuy action
         if action_type == 'rebuy':
             return self.handle_rebuy(player_to_game)
+
+        # Handle back action
         elif action_type == 'back':
-            if not request.user.is_superuser:
+            if not user.is_superuser:
                 raise PermissionDenied("Only superusers can undo a rebuy.")
             return self.handle_back(player_to_game)
 
     def handle_rebuy(self, player_to_game):
-        """Processes a rebuy action for a player in the game."""
         Action.objects.create(player_to_game=player_to_game, multiplier=1)
         return Response({"detail": f"Rebuy added for {player_to_game.player.username}!"}, status=status.HTTP_200_OK)
 
     def handle_back(self, player_to_game):
-        """Reverts the last rebuy action for a player, if possible."""
         last_action = Action.objects.filter(player_to_game=player_to_game).order_by('-action_time').first()
         if last_action:
             last_action.delete()

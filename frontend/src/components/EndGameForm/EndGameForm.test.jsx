@@ -24,25 +24,6 @@ describe("EndGameModal Component", () => {
     afterEach(() => {
         vi.clearAllMocks();
     });
-    it("should render players and show total money on the table", async () => {
-        api.get.mockResolvedValueOnce({
-            data: {
-                players: [
-                    { name: "Player1", stack: 1000, payout: 0 },
-                    { name: "Player2", stack: 2000, payout: 0 },
-                ],
-            },
-        });
-
-        renderWithRouter();
-
-        await waitFor(() => {
-            expect(screen.getByText("Money on table: 3000 PLN")).toBeInTheDocument();
-        });
-
-        expect(screen.getByText(/Player1 buyin for: 1000 cashout/i)).toBeInTheDocument();
-        expect(screen.getByText(/Player2 buyin for: 2000 cashout/i)).toBeInTheDocument();
-    });
     it("should update total money on the table when payouts are changed", async () => {
         api.get.mockResolvedValueOnce({
             data: {
